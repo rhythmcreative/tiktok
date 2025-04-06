@@ -75,4 +75,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 👤 Author
 
-- **Rhythm Creative** - Project Creator and Maintainer
+- Myself rhythmcreative
