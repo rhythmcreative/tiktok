@@ -4,12 +4,7 @@
 
 <h1 align="center">TikTok Desktop</h1>
 
-<p align="center">
-  <a href="https://aur.archlinux.org/packages/tiktok-desktop/"><img src="https://img.shields.io/aur/version/tiktok-desktop?style=flat-square&logo=arch-linux&label=AUR" alt="AUR Version"></a>
-  <a href="https://github.com/rhythmcreative/tiktok/releases"><img src="https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey?style=flat-square" alt="Platforms"></a>
-  <a href="#license"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
-  <a href="https://github.com/rhythmcreative/tiktok/releases"><img src="https://img.shields.io/github/v/release/rhythmcreative/tiktok?style=flat-square" alt="Version"></a>
-</p>
+
 
 <p align="center">
   An open source TikTok desktop application for all platforms to use.
