@@ -45,7 +45,7 @@ TikTok Desktop is an open-source, cross-platform application that brings the Tik
 You can install TikTok Desktop from the AUR for Arch/Manjaro distributions:
 
 ```bash
-git clone repository
+git clone https://github.com/rhythmcreative/tiktok.git
 cd tiktok
 chmod +x install.sh
 sudo ./install.sh
