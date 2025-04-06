@@ -62,7 +62,7 @@ U launch it on the terminal via putting ##tiktok
 
 ![alt text](image.png)
 
-# This image its just for reference nothing more
+### This image its just for reference nothing more
 
 ## 👥 Contributing
 
