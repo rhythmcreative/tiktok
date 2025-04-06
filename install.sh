@@ -217,13 +217,16 @@ info "Creating desktop entry..."
 cat > "$DESKTOP_PATH" << EOF
 [Desktop Entry]
 Name=TikTok
-Comment=Unofficial TikTok desktop application
+Comment=Make Your Day
+GenericName=Short-form Video Platform
 Exec=$SCRIPT_DIR/tiktok.sh
 Icon=$SCRIPT_DIR/icon.png
 Terminal=false
 Type=Application
-Categories=Network;Video;
-StartupWMClass=tiktok
+Categories=Network;Video;Social;InstantMessaging;
+Keywords=TikTok;Social Media;Videos;Shorts;Entertainment;
+StartupWMClass=TikTok
+Version=1.0
 EOF
 
 # Create desktop shortcut
