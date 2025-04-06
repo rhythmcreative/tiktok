@@ -8,6 +8,7 @@
 
 <p align="center">
   An open source TikTok desktop application for all platforms to use.
+  <br>
   I created this because in waydroid i cant use tiktok so I created tiktok for linux 🔥🔥✅
 </p>
 
