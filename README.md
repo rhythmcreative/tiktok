@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://www.startpage.com/av/proxy-image?piurl=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.x2GEo6h96r-IJQaOn5boVgHaHa%26pid%3DApi&sp=1743904566Tc5772fead2d9d7eec841a2dfa7013ed7bf7080275530784168229228a6016ba4" alt="TikTok Logo" width="200"/>
+  <img src="https://www.startpage.com/av/proxy-image?piurl=https%3A%2F%2Fclipartcraft.com%2Fimages%2Ftiktok-logo-tik-tok-2.png&sp=1743949627Tae9fbe2c304ca225aacddbf7ea0ffc193b1847e7f22a3fc136117c170c6cf3b5" alt="TikTok Logo" width="200"/>
 </p>
 
 <h1 align="center">TikTok Desktop</h1>
