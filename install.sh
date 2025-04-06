@@ -207,48 +207,108 @@ success "Launcher script created and made executable"
 # Setup desktop integration
 header "Setting Up Desktop Integration"
 
-# Ensure desktop directory exists
-mkdir -p ~/.local/share/applications
+# Get absolute paths for use in desktop entries
+SCRIPT_ABS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+EXEC_PATH="$SCRIPT_ABS_DIR/tiktok.sh"
+ICON_PATH="$SCRIPT_ABS_DIR/icon.png"
+
+# Verify the icon exists
+if [[ ! -f "$ICON_PATH" ]]; then
+  warning "Icon file not found at $ICON_PATH. Desktop entry may display without an icon."
+fi
+
+# Ensure applications directory exists
+XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+APPLICATIONS_DIR="$XDG_DATA_HOME/applications"
+info "Ensuring applications directory exists at $APPLICATIONS_DIR"
+mkdir -p "$APPLICATIONS_DIR"
 
 # Create desktop file
-DESKTOP_PATH=~/.local/share/applications/tiktok-desktop.desktop
+DESKTOP_PATH="$APPLICATIONS_DIR/tiktok-desktop.desktop"
 
 info "Creating desktop entry..."
 cat > "$DESKTOP_PATH" << EOF
 [Desktop Entry]
+Type=Application
 Name=TikTok
 Comment=Make Your Day
 GenericName=Short-form Video Platform
-Exec=$SCRIPT_DIR/tiktok.sh
-Icon=$SCRIPT_DIR/icon.png
+Exec=$EXEC_PATH
+Icon=$ICON_PATH
 Terminal=false
-Type=Application
 Categories=Network;Video;Social;InstantMessaging;
 Keywords=TikTok;Social Media;Videos;Shorts;Entertainment;
 StartupWMClass=TikTok
 Version=1.0
 EOF
 
-# Create desktop shortcut
-DESKTOP_DIR="$HOME/Desktop"
-if [[ -d "$DESKTOP_DIR" ]]; then
-  info "Creating desktop shortcut..."
-  DESKTOP_SHORTCUT="$DESKTOP_DIR/TikTok.desktop"
-  cp "$DESKTOP_PATH" "$DESKTOP_SHORTCUT"
-  chmod +x "$DESKTOP_SHORTCUT"
-  success "Desktop shortcut created at $DESKTOP_SHORTCUT"
+# Set proper permissions for .desktop file (not executable)
+chmod 644 "$DESKTOP_PATH"
+
+# Verify desktop entry creation
+if [[ -f "$DESKTOP_PATH" ]]; then
+  success "Desktop entry created at $DESKTOP_PATH"
 else
-  warning "Desktop directory not found. Skipping desktop shortcut creation."
+  error "Failed to create desktop entry at $DESKTOP_PATH"
+fi
+
+# Create desktop shortcut using XDG specification
+# First try XDG_DESKTOP_DIR, then try standard Desktop directory
+XDG_DESKTOP_DIR="${XDG_DESKTOP_DIR:-$HOME/Desktop}"
+if [[ ! -d "$XDG_DESKTOP_DIR" ]]; then
+  # Try to get desktop folder from user-dirs.dirs
+  if [[ -f "$XDG_CONFIG_HOME/user-dirs.dirs" ]]; then
+    source "$XDG_CONFIG_HOME/user-dirs.dirs"
+    XDG_DESKTOP_DIR="${XDG_DESKTOP_DIR:-$HOME/Desktop}"
+  fi
+fi
+
+if [[ -d "$XDG_DESKTOP_DIR" ]]; then
+  info "Creating desktop shortcut in $XDG_DESKTOP_DIR..."
+  DESKTOP_SHORTCUT="$XDG_DESKTOP_DIR/TikTok.desktop"
+  cp "$DESKTOP_PATH" "$DESKTOP_SHORTCUT"
+  # Set proper permissions (not executable)
+  chmod 644 "$DESKTOP_SHORTCUT"
+  
+  # Verify desktop shortcut creation
+  if [[ -f "$DESKTOP_SHORTCUT" ]]; then
+    success "Desktop shortcut created at $DESKTOP_SHORTCUT"
+  else
+    warning "Failed to create desktop shortcut at $DESKTOP_SHORTCUT"
+  fi
+else
+  warning "Desktop directory not found at $XDG_DESKTOP_DIR. Skipping desktop shortcut creation."
 fi
 
 # Make the shell script executable
-chmod +x "$SCRIPT_DIR/tiktok.sh"
-success "Desktop entry created at $DESKTOP_PATH"
+chmod +x "$EXEC_PATH"
 
 # Update desktop database
 if command_exists update-desktop-database; then
-  update-desktop-database ~/.local/share/applications &>/dev/null
-  success "Desktop database updated"
+  info "Updating desktop database..."
+  update-desktop-database "$APPLICATIONS_DIR" &>/dev/null
+  if [[ $? -eq 0 ]]; then
+    success "Desktop database updated successfully"
+  else
+    warning "Failed to update desktop database"
+  fi
+else
+  warning "update-desktop-database command not found. Desktop entry might not be immediately visible."
+fi
+
+# Notify the desktop environment about the new application using DBus
+if command_exists dbus-send; then
+  info "Notifying desktop environment about new application..."
+  dbus-send --session --type=method_call --dest=org.freedesktop.DBus \
+    /org/freedesktop/DBus org.freedesktop.DBus.ReloadConfig >/dev/null 2>&1
+  
+  # Force desktop refresh using file manager commands (covers more desktop environments)
+  if command_exists xdg-desktop-menu; then
+    xdg-desktop-menu forceupdate &>/dev/null
+    success "Desktop menu forced to update"
+  fi
+else
+  warning "dbus-send command not found. Manual desktop refresh may be required."
 fi
 
 # Setup terminal command
