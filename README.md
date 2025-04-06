@@ -60,7 +60,7 @@ U launch it on the terminal via putting ##tiktok
 
 ## 🛰️ Screenshots
 
-![alt text](image.png)
+Not for now
 
 ### This image its just for reference nothing more
 
