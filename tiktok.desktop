@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=TikTok
+Exec=/usr/local/bin/tiktok
+Icon=/home/rhythmcreative/tiktok/icon.png
+Type=Application
+Categories=Network;WebBrowser;
+Comment=TikTok Web Application
+Terminal=false
+StartupNotify=true
+

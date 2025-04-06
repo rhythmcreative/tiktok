@@ -1,0 +1,23 @@
+{
+  "name": "TikTok",
+  "version": "1.0.6",
+  "pkgrel": "1",
+  "description": "Unofficial TikTok desktop application.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --disable-gpu --disable-software-rasterizer --ozone-platform-hint=auto"
+  },
+  "repository": {
+    "url": "https://gitlab.com/tiktokdesktop.git"
+  },
+  "author": "Corey Bruce",
+  "license": "GPL",
+  "devDependencies": {
+    "@electron/packager": "^18.3.5",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "electron-context-menu": "^4.0.4"
+  }
+}
