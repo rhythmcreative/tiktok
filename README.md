@@ -1,14 +1,18 @@
 <p align="center">
-  <img src="https://www.startpage.com/av/proxy-image?piurl=https%3A%2F%2Fclipartcraft.com%2Fimages%2Ftiktok-logo-tik-tok-2.png&sp=1743949627Tae9fbe2c304ca225aacddbf7ea0ffc193b1847e7f22a3fc136117c170c6cf3b5" alt="TikTok Logo" width="200"/>
+  <img src="https://www.startpage.com/av/proxy-image?piurl=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.x2GEo6h96r-IJQaOn5boVgHaHa%26pid%3DApi&sp=1743904566Tc5772fead2d9d7eec841a2dfa7013ed7bf7080275530784168229228a6016ba4" alt="TikTok Logo" width="200"/>
 </p>
 
 <h1 align="center">TikTok Desktop</h1>
 
-
+<p align="center">
+  <a href="https://aur.archlinux.org/packages/tiktok-desktop/"><img src="https://img.shields.io/aur/version/tiktok-desktop?style=flat-square&logo=arch-linux&label=AUR" alt="AUR Version"></a>
+  <a href="https://github.com/rhythmcreative/tiktok/releases"><img src="https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey?style=flat-square" alt="Platforms"></a>
+  <a href="#license"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
+  <a href="https://github.com/rhythmcreative/tiktok/releases"><img src="https://img.shields.io/github/v/release/rhythmcreative/tiktok?style=flat-square" alt="Version"></a>
+</p>
 
 <p align="center">
   An open source TikTok desktop application for all platforms to use.
-  <br>
   I created this because in waydroid i cant use tiktok so I created tiktok for linux 🔥🔥✅
 </p>
 
@@ -45,7 +49,7 @@ TikTok Desktop is an open-source, cross-platform application that brings the Tik
 You can install TikTok Desktop from the AUR for Arch/Manjaro distributions:
 
 ```bash
-git clone https://github.com/rhythmcreative/tiktok.git
+git clone repository
 cd tiktok
 chmod +x install.sh
 sudo ./install.sh
@@ -60,9 +64,9 @@ U launch it on the terminal via putting ##tiktok
 
 ## 🛰️ Screenshots
 
-Not for now
+![alt text](image.png)
 
-### This image its just for reference nothing more
+# This image its just for reference nothing more
 
 ## 👥 Contributing
 
@@ -75,4 +79,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 👤 Author
 
-- Myself rhythmcreative
+- **Rhythm Creative** - Project Creator and Maintainer

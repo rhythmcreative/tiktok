@@ -1,214 +1,334 @@
 #!/bin/bash
+# TikTok Desktop Application Installer
+# This script installs the TikTok desktop application with all dependencies
+# Works on Arch Linux and other pacman-based distributions
 
-# Colors for better output
-GREEN='\033[0;32m'
+# Enable strict mode
+set -euo pipefail
+
+# ===========================================
+# Color definitions for beautiful output
+# ===========================================
 RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
 NC='\033[0m' # No Color
 
-# Print colored messages
-print_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+# ===========================================
+# Helper functions
+# ===========================================
+
+# Print a section header
+header() {
+  echo -e "\n${BOLD}${BLUE}=== $1 ===${NC}\n"
 }
 
-print_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
+# Print an info message
+info() {
+  echo -e "${CYAN}→ ${NC}$1"
 }
 
-print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+# Print a success message
+success() {
+  echo -e "${GREEN}✓ ${NC}$1"
 }
 
-# Function to check if a command exists
+# Print a warning message
+warning() {
+  echo -e "${YELLOW}! ${NC}$1"
+}
+
+# Print an error message and exit
+error() {
+  echo -e "${RED}✗ ERROR: ${NC}$1" >&2
+  exit 1
+}
+
+# Display a spinner for background processes
+spinner() {
+  local pid=$1
+  local message=$2
+  local spinstr='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+  local temp
+  
+  echo -ne "${CYAN}→ ${NC}$message "
+  
+  while kill -0 $pid 2>/dev/null; do
+    temp=${spinstr#?}
+    printf " [%c]  " "$spinstr"
+    spinstr=$temp${spinstr%"$temp"}
+    sleep 0.1
+    printf "\b\b\b\b\b"
+  done
+  
+  printf "    \b\b\b\b"
+  echo -e "${GREEN}✓${NC}"
+}
+
+# Check if command exists
 command_exists() {
-    command -v "$1" >/dev/null 2>&1
+  command -v "$1" >/dev/null 2>&1
 }
 
-# Check for browser dependencies
-check_browser_dependencies() {
-    print_info "Checking for browser dependencies..."
-    
-    if command_exists chromium; then
-        print_success "Chromium is installed."
-        BROWSER_FOUND="true"
-    elif command_exists google-chrome; then
-        print_success "Google Chrome is installed."
-        BROWSER_FOUND="true"
-    elif command_exists firefox; then
-        print_success "Firefox is installed."
-        BROWSER_FOUND="true"
-    else
-        print_info "No compatible browser found (Chromium, Google Chrome, or Firefox)."
-        print_info "The app will only work in Electron mode unless a browser is installed."
-        BROWSER_FOUND="false"
-    fi
+# Check if package is installed via pacman
+is_package_installed() {
+  pacman -Qi "$1" >/dev/null 2>&1
 }
 
-# Check if running on Arch Linux
-check_arch_linux() {
-    if [ -f /etc/arch-release ]; then
-        return 0
+# Check and install required system packages
+check_and_install_package() {
+  local pkg=$1
+  info "Checking for $pkg..."
+  
+  if ! is_package_installed "$pkg"; then
+    warning "$pkg is not installed. Installing..."
+    if sudo pacman -S --noconfirm "$pkg"; then
+      success "$pkg installed successfully!"
     else
-        print_error "This script is designed for Arch Linux."
-        print_info "You might need to manually install dependencies for your distribution."
-        return 1
+      error "Failed to install $pkg"
     fi
+  else
+    success "$pkg is already installed!"
+  fi
 }
 
-# Check and install Node.js and npm
-install_nodejs() {
-    print_info "Checking for Node.js and npm..."
-    
-    if command_exists node && command_exists npm; then
-        print_success "Node.js and npm are already installed."
-        print_info "Node version: $(node -v)"
-        print_info "npm version: $(npm -v)"
-    else
-        print_info "Installing Node.js and npm..."
-        if sudo pacman -Sy --noconfirm nodejs npm; then
-            print_success "Node.js and npm have been installed successfully."
-        else
-            print_error "Failed to install Node.js and npm. Please install them manually."
-            exit 1
-        fi
-    fi
+# Create a simple progress bar
+progress_bar() {
+  local duration=$1
+  local steps=20
+  local step_duration=$(echo "$duration / $steps" | bc -l)
+  
+  echo -ne "${CYAN}→ ${NC}$2 ["
+  for ((i=0; i<steps; i++)); do
+    echo -ne "${BLUE}=${NC}"
+    sleep "$step_duration"
+  done
+  echo -e "] ${GREEN}✓${NC}"
 }
+
+# Animation for script start
+start_animation() {
+  echo -e "${MAGENTA}"
+  echo -e "  ████████╗██╗██╗  ██╗████████╗ ██████╗ ██╗  ██╗"
+  echo -e "  ╚══██╔══╝██║██║ ██╔╝╚══██╔══╝██╔═══██╗██║ ██╔╝"
+  echo -e "     ██║   ██║█████╔╝    ██║   ██║   ██║█████╔╝ "
+  echo -e "     ██║   ██║██╔═██╗    ██║   ██║   ██║██╔═██╗ "
+  echo -e "     ██║   ██║██║  ██╗   ██║   ╚██████╔╝██║  ██╗"
+  echo -e "     ╚═╝   ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝"
+  echo -e "${NC}"
+  echo -e "${BOLD}Desktop Application Installer${NC}"
+  echo -e "────────────────────────────────────────────────"
+  sleep 1
+}
+
+# ===========================================
+# Main installation process
+# ===========================================
+
+# Display welcome animation
+start_animation
+
+# Check if we're running on Arch Linux
+header "Checking System Compatibility"
+if [[ -f /etc/arch-release ]] || command_exists pacman; then
+  success "Running on Arch Linux or compatible distribution"
+else
+  warning "This script is optimized for Arch Linux. Some features may not work correctly."
+fi
+
+# Check for root permissions
+if [[ $EUID -eq 0 ]]; then
+  error "This script should not be run as root. Please run as a normal user."
+fi
+
+# Set up trap for clean exit
+trap 'echo -e "\n${RED}Installation aborted.${NC}"; exit 1' INT TERM
+
+# Check and install system dependencies
+header "Checking System Dependencies"
+
+# Essential dependencies
+for pkg in git nodejs npm base-devel; do
+  check_and_install_package "$pkg"
+done
+
+# Verify Node.js and npm versions
+NODE_VERSION=$(node -v)
+NPM_VERSION=$(npm -v)
+
+info "Node.js version: $NODE_VERSION"
+info "npm version: $NPM_VERSION"
+
+# Comparing versions
+if [[ "${NODE_VERSION:1:2}" -lt 16 ]]; then
+  warning "Node.js version $NODE_VERSION might be too old. Consider updating to v16 or newer."
+fi
 
 # Install npm dependencies
-install_npm_dependencies() {
-    print_info "Installing npm dependencies..."
-    
-    # Navigate to the TikTok directory
-    cd "$(dirname "$0")"
-    
-    if npm install; then
-        print_success "npm dependencies installed successfully."
-    else
-        print_error "Failed to install npm dependencies."
-        exit 1
-    fi
-}
+header "Installing Application Dependencies"
 
-# Setup desktop integration
-setup_desktop_integration() {
-    print_info "Setting up desktop integration..."
-    
-    # Create necessary directories if they don't exist
-    if ! sudo mkdir -p /usr/local/bin; then
-        print_error "Failed to create /usr/local/bin directory."
-        exit 1
-    fi
-    
-    if ! mkdir -p ~/.local/share/applications; then
-        print_error "Failed to create ~/.local/share/applications directory."
-        exit 1
-    fi
-    
-    # Get the full path to the TikTok directory
-    APP_DIR="$(cd "$(dirname "$0")" && pwd)"
-    
-    # Create the improved TikTok launch script
-    print_info "Creating TikTok launch script..."
-    
-    # Write the launch script content to /usr/local/bin/tiktok
-    if ! sudo bash -c "cat > /usr/local/bin/tiktok" << 'EOL'
+# Check if we need to install dependencies
+if [[ ! -d "node_modules" ]]; then
+  info "Installing npm dependencies..."
+  npm install --silent & spinner $! "Installing runtime dependencies..."
+  
+  info "Installing dev dependencies..."
+  npm install --silent --save-dev electron @electron/packager electron-builder & spinner $! "Installing development dependencies..."
+else
+  info "Checking for dependency updates..."
+  npm update --silent & spinner $! "Updating dependencies..."
+fi
+
+# Define script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+
+# Create launcher script
+header "Creating Launcher Script"
+
+info "Creating tiktok.sh launcher script..."
+cat > "$SCRIPT_DIR/tiktok.sh" << EOF
 #!/bin/bash
 
-# Try to launch TikTok in a standalone browser window first
-if command -v chromium &> /dev/null; then
-    chromium --app="https://www.tiktok.com/" --new-window --profile-directory=TikTok
-    exit $?
-elif command -v google-chrome &> /dev/null; then
-    google-chrome --app="https://www.tiktok.com/" --new-window --profile-directory=TikTok
-    exit $?
-elif command -v firefox &> /dev/null; then
-    firefox --new-instance --kiosk "https://www.tiktok.com/"
-    exit $?
-fi
+# This script runs the TikTok Electron app using npm start
+# It can be used for AUR and other package managers combined with libelectron
 
-# If we reach here, try to launch the Electron app
-if [ -d "${APP_DIR}" ]; then
-    cd "${APP_DIR}" || exit 1
-    if [ -f "package.json" ]; then
-        npm start
-        exit $?
-    else
-        echo "Error: package.json not found in TikTok directory"
-        exit 1
-    fi
+echo "Starting TikTok..."
+cd "$SCRIPT_DIR" || exit 1
+npm start
+EOF
+
+chmod +x "$SCRIPT_DIR/tiktok.sh"
+success "Launcher script created and made executable"
+
+# Setup desktop integration
+header "Setting Up Desktop Integration"
+
+# Ensure desktop directory exists
+mkdir -p ~/.local/share/applications
+
+# Create desktop file
+DESKTOP_PATH=~/.local/share/applications/tiktok-desktop.desktop
+
+info "Creating desktop entry..."
+cat > "$DESKTOP_PATH" << EOF
+[Desktop Entry]
+Name=TikTok
+Comment=Unofficial TikTok desktop application
+Exec=$SCRIPT_DIR/tiktok.sh
+Icon=$SCRIPT_DIR/icon.png
+Terminal=false
+Type=Application
+Categories=Network;Video;
+StartupWMClass=tiktok
+EOF
+
+# Create desktop shortcut
+DESKTOP_DIR="$HOME/Desktop"
+if [[ -d "$DESKTOP_DIR" ]]; then
+  info "Creating desktop shortcut..."
+  DESKTOP_SHORTCUT="$DESKTOP_DIR/TikTok.desktop"
+  cp "$DESKTOP_PATH" "$DESKTOP_SHORTCUT"
+  chmod +x "$DESKTOP_SHORTCUT"
+  success "Desktop shortcut created at $DESKTOP_SHORTCUT"
 else
-    echo "Error: TikTok directory not found at ${APP_DIR}"
-    echo "No compatible browser found and TikTok directory is missing."
-    exit 1
+  warning "Desktop directory not found. Skipping desktop shortcut creation."
 fi
-EOL
-    then
-        print_error "Failed to create the launch script."
-        exit 1
-    fi
-    
-    # Fix the path in the script to use the full application path
-    if ! sudo sed -i "s|\${APP_DIR}|${APP_DIR}|g" /usr/local/bin/tiktok; then
-        print_error "Failed to update the application path in the launch script."
-        exit 1
-    fi
-    
-    # Make the script executable
-    if ! sudo chmod +x /usr/local/bin/tiktok; then
-        print_error "Failed to make the script executable."
-        exit 1
-    fi
-    
-    # Update the desktop file with correct icon path
-    if ! sed -i "s|Icon=.*|Icon=${APP_DIR}/icon.png|g" "$APP_DIR/tiktok.desktop"; then
-        print_error "Failed to update icon path in desktop file."
-        exit 1
-    fi
-    
-    # Copy the desktop entry file
-    if ! cp "$APP_DIR/tiktok.desktop" ~/.local/share/applications/; then
-        print_error "Failed to copy desktop entry file."
-        exit 1
-    fi
-    
-    # Update desktop database
-    if command_exists update-desktop-database; then
-        if ! update-desktop-database ~/.local/share/applications; then
-            print_error "Failed to update desktop database."
-            # Not critical, so don't exit
-        fi
-    fi
-    
-    print_success "Desktop integration completed successfully."
-}
 
-# Main installation process
-main() {
-    print_info "Starting TikTok desktop application installation..."
-    
-    # Check if running on Arch Linux
-    check_arch_linux || exit 1
-    
-    # Check for browser dependencies
-    check_browser_dependencies
-    
-    # Install Node.js and npm
-    install_nodejs
-    
-    # Install npm dependencies
-    install_npm_dependencies
-    
-    # Setup desktop integration
-    setup_desktop_integration
-    
-    print_success "TikTok desktop application has been installed successfully!"
-    print_info "You can now launch TikTok from your application menu or by typing 'tiktok' in terminal."
-    
-    if [ "$BROWSER_FOUND" = "false" ]; then
-        print_info "Note: No web browsers were detected. TikTok will run in Electron mode only."
-        print_info "Install Chromium, Google Chrome, or Firefox for web app functionality."
-    fi
-}
+# Make the shell script executable
+chmod +x "$SCRIPT_DIR/tiktok.sh"
+success "Desktop entry created at $DESKTOP_PATH"
 
-# Run the main function
-main
+# Update desktop database
+if command_exists update-desktop-database; then
+  update-desktop-database ~/.local/share/applications &>/dev/null
+  success "Desktop database updated"
+fi
+
+# Setup terminal command
+header "Setting Up Terminal Command"
+
+info "Adding terminal command 'tiktok'..."
+
+# Determine shell and config file
+SHELL_CONFIG=""
+if [[ "$SHELL" == *"zsh"* ]]; then
+  SHELL_CONFIG="$HOME/.zshrc"
+elif [[ "$SHELL" == *"bash"* ]]; then
+  SHELL_CONFIG="$HOME/.bashrc"
+fi
+
+if [[ -n "$SHELL_CONFIG" ]]; then
+  # Check if alias already exists
+  if grep -q "alias tiktok=" "$SHELL_CONFIG"; then
+    info "Terminal command 'tiktok' already exists"
+  else
+    # Add alias to shell config
+    echo -e "\n# TikTok Desktop Application alias" >> "$SHELL_CONFIG"
+    echo "alias tiktok='$SCRIPT_DIR/tiktok.sh'" >> "$SHELL_CONFIG"
+    success "Terminal command 'tiktok' added to $SHELL_CONFIG"
+    info "You'll need to restart your terminal or run 'source $SHELL_CONFIG' to use it"
+  fi
+else
+  warning "Unable to determine shell configuration file. Manual setup required."
+  info "To use TikTok from anywhere, add this to your shell config file:"
+  echo "alias tiktok='$SCRIPT_DIR/tiktok.sh'"
+fi
+
+# Create a symlink in /usr/local/bin (requires sudo)
+info "Creating system-wide command (requires sudo)..."
+if sudo ln -sf "$SCRIPT_DIR/tiktok.sh" /usr/local/bin/tiktok 2>/dev/null; then
+  sudo chmod +x /usr/local/bin/tiktok
+  success "System-wide 'tiktok' command created"
+else
+  warning "Could not create system-wide command. You may need to run with sudo."
+fi
+
+# Validate installation
+header "Validating Installation"
+
+# Check for critical files and dependencies
+info "Performing post-installation checks..."
+
+progress_bar 1 "Checking files"
+if [[ ! -f "main.js" ]]; then
+  error "main.js not found. Installation may be corrupted."
+fi
+
+progress_bar 1 "Checking dependencies"
+if [[ ! -x "tiktok.sh" ]]; then
+  error "tiktok.sh not found or not executable."
+fi
+
+progress_bar 1 "Checking node_modules"
+if [[ ! -d "node_modules" ]]; then
+  error "Node modules not installed correctly."
+fi
+
+progress_bar 1 "Checking electron"
+if [[ ! -d "node_modules/electron" ]]; then
+  error "Electron not installed correctly."
+fi
+
+# All checks passed
+header "Installation Complete"
+echo -e "
+${GREEN}TikTok Desktop Application has been successfully installed!${NC}
+
+${BOLD}To start the application:${NC}
+  1. Type ${CYAN}tiktok${NC} in your terminal
+  2. Run ${CYAN}./tiktok.sh${NC} from this directory
+  3. Click the desktop shortcut on your Desktop
+  4. Use your desktop environment's application menu
+
+${BOLD}For updates:${NC}
+  Run this installer again to update dependencies
+
+${YELLOW}Note:${NC} If you encounter any issues, please report them at the repository.
+"
+
+exit 0
+

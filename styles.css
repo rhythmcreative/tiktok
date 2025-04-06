@@ -1,16 +1,22 @@
+html {
+  height: 100%;
+}
+
 body {
   margin: 0;
   background: #000000;
+  height: 100%;
+  overflow: hidden;
 }
 .logo {
   position: absolute;
-  top:0;
+  top: 0;
   bottom: 0;
   left: 0;
   right: 0;
   margin: auto;
   width: 200px;
-  height: auto;
+  height: 200px; /* Fixed height to ensure visibility */
   background: url("tiktok-icon.svg");
   background-repeat: no-repeat;
   -webkit-background-origin: padding-box;
@@ -19,24 +25,35 @@ body {
   background-clip: border-box;
   -webkit-background-size: 100% 100%;
   background-size: 100% 100%;  
-  -webkit-animation: fade-in 1.2s cubic-bezier(0.390, 0.575, 0.565, 1.000) 0.3s both;
-	animation: fade-in 1.2s cubic-bezier(0.390, 0.575, 0.565, 1.000) 0.3s both;  
+  -webkit-animation: fade-in 1.2s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
+  animation: fade-in 1.2s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
+  z-index: 10;
 }
 .container {
-  margin: auto;
+  margin: 0;
   width: 100%;
   height: 100%;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 5;
 }
 .loader-cont {
   position: absolute;
-  height: auto;
+  height: 20px;
   border-radius: 8px;
-  top: 80%;
+  top: 75%;  /* Moved further down */
   left: 50%;
   transform: translate(-50%, -50%);
-  -webkit-animation: fade-in 1.4s cubic-bezier(0.390, 0.575, 0.565, 1.000) 0.5s both;
-  animation: fade-in 1.4s cubic-bezier(0.390, 0.575, 0.565, 1.000) 0.5s both;
+  -webkit-animation: fade-in 1s cubic-bezier(0.390, 0.575, 0.565, 1.000) 0.2s both;
+  animation: fade-in 1s cubic-bezier(0.390, 0.575, 0.565, 1.000) 0.2s both;
+  width: 100px;
+  text-align: center;
+  z-index: 20;
+  display: block;
+  visibility: visible;
 }
 @-webkit-keyframes fade-in {
   0% {
@@ -56,15 +73,18 @@ body {
 }
 .dot-pulse {
   position: relative;
-  left: -9999px;
   width: 10px;
   height: 10px;
   border-radius: 5px;
-  background-color: #ff0000;
-  color: #ff0000;
-  box-shadow: 9999px 0 0 -5px;
+  background-color: #ff0050; /* TikTok's branding color */
+  color: #ff0050;
+  /* removed box-shadow to fix dot count */
   animation: dot-pulse 1.5s infinite linear;
   animation-delay: 0.25s;
+  margin: 0 auto;
+  display: inline-block;
+  opacity: 1;
+  visibility: visible;
 }
 .dot-pulse::before, .dot-pulse::after {
   content: "";
@@ -74,50 +94,64 @@ body {
   width: 10px;
   height: 10px;
   border-radius: 5px;
-  background-color: #ff0000;
-  color: #ff0000;
+  background-color: #ff0050;
+  color: #ff0050;
+  opacity: 1;
+  visibility: visible;
 }
 .dot-pulse::before {
-  box-shadow: 9984px 0 0 -5px;
+  left: -20px; /* Position left dot */
   animation: dot-pulse-before 1.5s infinite linear;
   animation-delay: 0s;
 }
+
 .dot-pulse::after {
-  box-shadow: 10014px 0 0 -5px;
+  left: 20px; /* Position right dot */
   animation: dot-pulse-after 1.5s infinite linear;
   animation-delay: 0.5s;
 }
 
 @keyframes dot-pulse-before {
   0% {
-    box-shadow: 9984px 0 0 -5px;
+    transform: scale(0.8);
+    opacity: 0.5;
   }
   30% {
-    box-shadow: 9984px 0 0 2px;
+    transform: scale(1.2);
+    opacity: 1;
   }
   60%, 100% {
-    box-shadow: 9984px 0 0 -5px;
+    transform: scale(0.8);
+    opacity: 0.5;
   }
 }
+
 @keyframes dot-pulse {
   0% {
-    box-shadow: 9999px 0 0 -5px;
+    transform: scale(0.8);
+    opacity: 0.5;
   }
   30% {
-    box-shadow: 9999px 0 0 2px;
+    transform: scale(1.2);
+    opacity: 1;
   }
   60%, 100% {
-    box-shadow: 9999px 0 0 -5px;
+    transform: scale(0.8);
+    opacity: 0.5;
   }
 }
+
 @keyframes dot-pulse-after {
   0% {
-    box-shadow: 10014px 0 0 -5px;
+    transform: scale(0.8);
+    opacity: 0.5;
   }
   30% {
-    box-shadow: 10014px 0 0 2px;
+    transform: scale(1.2);
+    opacity: 1;
   }
   60%, 100% {
-    box-shadow: 10014px 0 0 -5px;
+    transform: scale(0.8);
+    opacity: 0.5;
   }
 }
