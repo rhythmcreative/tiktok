@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="https://www.startpage.com/av/proxy-image?piurl=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.DcXL7HYAjuJtaypdbE5R4QHaFi%26pid%3DApi&sp=1743949627T762d9f483765c1c6589cb6830f6d0662fd9505b3e37f395c56c57ff62bf95b82" alt="TikTok Logo" width="200"/>
-</p>
-
 <h1 align="center">TikTok Desktop</h1>
 
 <p align="center">
@@ -60,23 +56,10 @@ sudo ./install.sh
 
 After installation, launch the application from your application menu or desktop shortcut.
 
-U launch it on the terminal via putting ##tiktok
+U launch it on the terminal via putting tiktok
 
 ## 🛰️ Screenshots
 
 ![alt text](image.png)
 
 # This image its just for reference nothing more
-
-## 👥 Contributing
-
-Contributions are welcome! if you want
-
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 👤 Author
-
-- **Rhythm Creative** - Project Creator and Maintainer
