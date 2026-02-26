@@ -38,23 +38,33 @@ TikTok Desktop is an open-source, cross-platform application that brings the Tik
 
 ## 📥 Installation
 
-### For linux
+### For Linux
 
-You can install TikTok Desktop from the AUR for Arch/Manjaro distributions:
+The installer supports multiple distributions and will automatically handle system dependencies (Git, Node.js, npm, and build tools).
+
+**Supported Distributions:**
+- **Arch Linux** (and derivatives like Manjaro, EndeavourOS)
+- **Debian / Ubuntu** (and derivatives like Linux Mint, Pop!_OS)
+- **Fedora / RHEL / CentOS** (using DNF or YUM)
+
+To install, clone the repository and run the `install.sh` script:
 
 ```bash
 git clone https://github.com/rhythmcreative/tiktok.git
 cd tiktok
 chmod +x install.sh
-sudo ./install.sh
+./install.sh
 ```
 
+> [!IMPORTANT]
+> **Do not run the script with `sudo`**. The script will request root privileges only when necessary for installing system packages.
 
 ## 🔧 Usage
 
-After installation, launch the application from your application menu or desktop shortcut.
-
-U launch it on the terminal via putting tiktok
+After installation, you can launch the application in several ways:
+1. **Application Menu:** Look for "TikTok" in your desktop environment's app menu.
+2. **Desktop Shortcut:** Use the "TikTok" icon on your desktop.
+3. **Terminal:** Simply type `tiktok` in your terminal.
 
 ## 🛰️ Screenshots
 
