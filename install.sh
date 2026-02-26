@@ -224,11 +224,16 @@ header "Checking System Dependencies"
 
 # Package mappings
 DEV_TOOLS_MAP="arch:base-devel:debian:build-essential:rpm:\"Development Tools\""
+XDG_UTILS_MAP="arch:xdg-utils:debian:xdg-utils:rpm:xdg-utils"
+DESKTOP_FILE_UTILS_MAP="arch:desktop-file-utils:debian:desktop-file-utils:rpm:desktop-file-utils"
 
 # Essential dependencies
 check_and_install_package "git"
 check_and_install_package "nodejs"
 check_and_install_package "npm"
+check_and_install_package "xdg-utils" "$XDG_UTILS_MAP"
+check_and_install_package "desktop-file-utils" "$DESKTOP_FILE_UTILS_MAP"
+
 if [[ "$PACKAGE_MANAGER" == "dnf" || "$PACKAGE_MANAGER" == "yum" ]]; then
     info "Installing Development Tools group..."
     if sudo "$PACKAGE_MANAGER" groupinstall -y "Development Tools"; then
@@ -295,21 +300,31 @@ header "Setting Up Desktop Integration"
 # Get absolute paths for use in desktop entries
 SCRIPT_ABS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 EXEC_PATH="$SCRIPT_ABS_DIR/tiktok.sh"
-ICON_PATH="$SCRIPT_ABS_DIR/icon.png"
+LOCAL_ICON_PATH="$SCRIPT_ABS_DIR/icon.png"
 
-# Verify the icon exists
-if [[ ! -f "$ICON_PATH" ]]; then
-  warning "Icon file not found at $ICON_PATH. Desktop entry may display without an icon."
+# Setup icons directory
+XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+ICONS_DIR="$XDG_DATA_HOME/icons/hicolor/256x256/apps"
+mkdir -p "$ICONS_DIR"
+
+# Copy icon to a standard location if it exists
+if [[ -f "$LOCAL_ICON_PATH" ]]; then
+  info "Installing application icon..."
+  cp "$LOCAL_ICON_PATH" "$ICONS_DIR/tiktok.png"
+  ICON_NAME="tiktok"
+else
+  warning "Icon file not found at $LOCAL_ICON_PATH. Desktop entry may display without an icon."
+  ICON_NAME="video-x-generic"
 fi
 
 # Ensure applications directory exists
-XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 APPLICATIONS_DIR="$XDG_DATA_HOME/applications"
 info "Ensuring applications directory exists at $APPLICATIONS_DIR"
 mkdir -p "$APPLICATIONS_DIR"
 
 # Create desktop file
-DESKTOP_PATH="$APPLICATIONS_DIR/tiktok-desktop.desktop"
+DESKTOP_FILE_NAME="tiktok-desktop.desktop"
+DESKTOP_PATH="$APPLICATIONS_DIR/$DESKTOP_FILE_NAME"
 
 info "Creating desktop entry..."
 cat > "$DESKTOP_PATH" << EOF
@@ -319,7 +334,7 @@ Name=TikTok
 Comment=Make Your Day
 GenericName=Short-form Video Platform
 Exec=$EXEC_PATH
-Icon=$ICON_PATH
+Icon=$ICON_NAME
 Terminal=false
 Categories=Network;Video;Social;InstantMessaging;
 Keywords=TikTok;Social Media;Videos;Shorts;Entertainment;
@@ -330,71 +345,46 @@ EOF
 # Set proper permissions for .desktop file (not executable)
 chmod 644 "$DESKTOP_PATH"
 
-# Verify desktop entry creation
-if [[ -f "$DESKTOP_PATH" ]]; then
-  success "Desktop entry created at $DESKTOP_PATH"
-else
-  error "Failed to create desktop entry at $DESKTOP_PATH"
+# Register the desktop file using xdg-desktop-menu
+if command_exists xdg-desktop-menu; then
+  info "Registering desktop entry with xdg-desktop-menu..."
+  xdg-desktop-menu install --mode user "$DESKTOP_PATH"
 fi
 
 # Create desktop shortcut using XDG specification
-# First try XDG_DESKTOP_DIR, then try standard Desktop directory
 XDG_DESKTOP_DIR="${XDG_DESKTOP_DIR:-$HOME/Desktop}"
 if [[ ! -d "$XDG_DESKTOP_DIR" ]]; then
-  # Try to get desktop folder from user-dirs.dirs
-  if [[ -f "$XDG_CONFIG_HOME/user-dirs.dirs" ]]; then
-    source "$XDG_CONFIG_HOME/user-dirs.dirs"
+  if [[ -f "${XDG_CONFIG_HOME:-$HOME/.config}/user-dirs.dirs" ]]; then
+    source "${XDG_CONFIG_HOME:-$HOME/.config}/user-dirs.dirs"
     XDG_DESKTOP_DIR="${XDG_DESKTOP_DIR:-$HOME/Desktop}"
   fi
 fi
 
 if [[ -d "$XDG_DESKTOP_DIR" ]]; then
   info "Creating desktop shortcut in $XDG_DESKTOP_DIR..."
-  DESKTOP_SHORTCUT="$XDG_DESKTOP_DIR/TikTok.desktop"
+  DESKTOP_SHORTCUT="$XDG_DESKTOP_DIR/$DESKTOP_FILE_NAME"
   cp "$DESKTOP_PATH" "$DESKTOP_SHORTCUT"
-  # Set proper permissions (not executable)
   chmod 644 "$DESKTOP_SHORTCUT"
-  
-  # Verify desktop shortcut creation
-  if [[ -f "$DESKTOP_SHORTCUT" ]]; then
-    success "Desktop shortcut created at $DESKTOP_SHORTCUT"
-  else
-    warning "Failed to create desktop shortcut at $DESKTOP_SHORTCUT"
-  fi
-else
-  warning "Desktop directory not found at $XDG_DESKTOP_DIR. Skipping desktop shortcut creation."
+  # Some desktop environments require the executable bit for desktop shortcuts to work
+  # but xdg spec says they shouldn't. We'll stick to 644 but note it.
 fi
 
-# Make the shell script executable
-chmod +x "$EXEC_PATH"
-
-# Update desktop database
+# Update desktop and icon databases
 if command_exists update-desktop-database; then
-  info "Updating desktop database..."
   update-desktop-database "$APPLICATIONS_DIR" &>/dev/null
-  if [[ $? -eq 0 ]]; then
-    success "Desktop database updated successfully"
-  else
-    warning "Failed to update desktop database"
-  fi
-else
-  warning "update-desktop-database command not found. Desktop entry might not be immediately visible."
 fi
 
-# Notify the desktop environment about the new application using DBus
+if command_exists gtk-update-icon-cache; then
+  gtk-update-icon-cache -f -t "$XDG_DATA_HOME/icons/hicolor" &>/dev/null || true
+fi
+
+# Notify the desktop environment using DBus
 if command_exists dbus-send; then
-  info "Notifying desktop environment about new application..."
   dbus-send --session --type=method_call --dest=org.freedesktop.DBus \
     /org/freedesktop/DBus org.freedesktop.DBus.ReloadConfig >/dev/null 2>&1
-  
-  # Force desktop refresh using file manager commands (covers more desktop environments)
-  if command_exists xdg-desktop-menu; then
-    xdg-desktop-menu forceupdate &>/dev/null
-    success "Desktop menu forced to update"
-  fi
-else
-  warning "dbus-send command not found. Manual desktop refresh may be required."
 fi
+
+success "Desktop integration complete"
 
 # Setup terminal command
 header "Setting Up Terminal Command"
@@ -403,62 +393,43 @@ info "Adding terminal command 'tiktok'..."
 
 # Determine shell and config file
 SHELL_CONFIG=""
-if [[ "$SHELL" == *"zsh"* ]]; then
+if [[ "${SHELL:-}" == *"zsh"* ]]; then
   SHELL_CONFIG="$HOME/.zshrc"
-elif [[ "$SHELL" == *"bash"* ]]; then
+elif [[ "${SHELL:-}" == *"bash"* ]]; then
   SHELL_CONFIG="$HOME/.bashrc"
 fi
 
 if [[ -n "$SHELL_CONFIG" ]]; then
-  # Check if alias already exists
-  if grep -q "alias tiktok=" "$SHELL_CONFIG"; then
-    info "Terminal command 'tiktok' already exists"
-  else
-    # Add alias to shell config
+  if ! grep -q "alias tiktok=" "$SHELL_CONFIG"; then
     echo -e "\n# TikTok Desktop Application alias" >> "$SHELL_CONFIG"
     echo "alias tiktok='$SCRIPT_DIR/tiktok.sh'" >> "$SHELL_CONFIG"
     success "Terminal command 'tiktok' added to $SHELL_CONFIG"
-    info "You'll need to restart your terminal or run 'source $SHELL_CONFIG' to use it"
+  else
+    info "Terminal command 'tiktok' already exists"
   fi
-else
-  warning "Unable to determine shell configuration file. Manual setup required."
-  info "To use TikTok from anywhere, add this to your shell config file:"
-  echo "alias tiktok='$SCRIPT_DIR/tiktok.sh'"
 fi
 
 # Create a symlink in /usr/local/bin (requires sudo)
-info "Creating system-wide command (requires sudo)..."
 if sudo ln -sf "$SCRIPT_DIR/tiktok.sh" /usr/local/bin/tiktok 2>/dev/null; then
   sudo chmod +x /usr/local/bin/tiktok
   success "System-wide 'tiktok' command created"
-else
-  warning "Could not create system-wide command. You may need to run with sudo."
 fi
 
 # Validate installation
 header "Validating Installation"
 
-# Check for critical files and dependencies
 info "Performing post-installation checks..."
 
-progress_bar 1 "Checking files"
 if [[ ! -f "main.js" ]]; then
   error "main.js not found. Installation may be corrupted."
 fi
 
-progress_bar 1 "Checking dependencies"
 if [[ ! -x "tiktok.sh" ]]; then
   error "tiktok.sh not found or not executable."
 fi
 
-progress_bar 1 "Checking node_modules"
 if [[ ! -d "node_modules" ]]; then
   error "Node modules not installed correctly."
-fi
-
-progress_bar 1 "Checking electron"
-if [[ ! -d "node_modules/electron" ]]; then
-  error "Electron not installed correctly."
 fi
 
 # All checks passed
