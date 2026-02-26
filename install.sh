@@ -24,40 +24,45 @@ NC='\033[0m' # No Color
 
 # Print a section header
 header() {
-  echo -e "\n${BOLD}${BLUE}=== $1 ===${NC}\n"
+  local title="${1:-}"
+  echo -e "\n${BOLD}${BLUE}=== $title ===${NC}\n"
 }
 
 # Print an info message
 info() {
-  echo -e "${CYAN}→ ${NC}$1"
+  local msg="${1:-}"
+  echo -e "${CYAN}→ ${NC}$msg"
 }
 
 # Print a success message
 success() {
-  echo -e "${GREEN}✓ ${NC}$1"
+  local msg="${1:-}"
+  echo -e "${GREEN}✓ ${NC}$msg"
 }
 
 # Print a warning message
 warning() {
-  echo -e "${YELLOW}! ${NC}$1"
+  local msg="${1:-}"
+  echo -e "${YELLOW}! ${NC}$msg"
 }
 
 # Print an error message and exit
 error() {
-  echo -e "${RED}✗ ERROR: ${NC}$1" >&2
+  local msg="${1:-}"
+  echo -e "${RED}✗ ERROR: ${NC}$msg" >&2
   exit 1
 }
 
 # Display a spinner for background processes
 spinner() {
-  local pid=$1
-  local message=$2
+  local pid="${1:-}"
+  local message="${2:-}"
   local spinstr='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
   local temp
   
   echo -ne "${CYAN}→ ${NC}$message "
   
-  while kill -0 $pid 2>/dev/null; do
+  while kill -0 "$pid" 2>/dev/null; do
     temp=${spinstr#?}
     printf " [%c]  " "$spinstr"
     spinstr=$temp${spinstr%"$temp"}
@@ -71,7 +76,8 @@ spinner() {
 
 # Check if command exists
 command_exists() {
-  command -v "$1" >/dev/null 2>&1
+  local cmd="${1:-}"
+  command -v "$cmd" >/dev/null 2>&1
 }
 
 # ===========================================
@@ -99,7 +105,7 @@ detect_distro() {
 }
 
 is_package_installed() {
-    local pkg=$1
+    local pkg="${1:-}"
     case "$PACKAGE_MANAGER" in
         pacman)
             pacman -Qi "$pkg" &>/dev/null
@@ -114,7 +120,7 @@ is_package_installed() {
 }
 
 install_package() {
-    local pkg=$1
+    local pkg="${1:-}"
     local install_cmd=""
     case "$PACKAGE_MANAGER" in
         pacman)
@@ -139,8 +145,8 @@ install_package() {
 }
 
 check_and_install_package() {
-  local pkg_name=$1
-  local pkg_map=$2
+  local pkg_name="${1:-}"
+  local pkg_map="${2:-}"
   local pkg
 
   if [[ -n "$pkg_map" ]]; then
@@ -164,12 +170,13 @@ check_and_install_package() {
 
 # Create a simple progress bar
 progress_bar() {
-  local duration=$1
+  local duration="${1:-0}"
+  local msg="${2:-}"
   local steps=20
   local step_duration
   step_duration=$(echo "$duration / $steps" | bc -l)
   
-  echo -ne "${CYAN}→ ${NC}$2 ["
+  echo -ne "${CYAN}→ ${NC}$msg ["
   for ((i=0; i<steps; i++)); do
     echo -ne "${BLUE}=${NC}"
     sleep "$step_duration"
