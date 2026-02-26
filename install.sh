@@ -22,38 +22,32 @@ NC='\033[0m' # No Color
 # Helper functions
 # ===========================================
 
-# Print a section header
 header() {
   local title="${1:-}"
   echo -e "\n${BOLD}${BLUE}=== $title ===${NC}\n"
 }
 
-# Print an info message
 info() {
   local msg="${1:-}"
   echo -e "${CYAN}→ ${NC}$msg"
 }
 
-# Print a success message
 success() {
   local msg="${1:-}"
   echo -e "${GREEN}✓ ${NC}$msg"
 }
 
-# Print a warning message
 warning() {
   local msg="${1:-}"
   echo -e "${YELLOW}! ${NC}$msg"
 }
 
-# Print an error message and exit
 error() {
   local msg="${1:-}"
   echo -e "${RED}✗ ERROR: ${NC}$msg" >&2
   exit 1
 }
 
-# Display a spinner for background processes
 spinner() {
   local pid="${1:-}"
   local message="${2:-}"
@@ -74,7 +68,6 @@ spinner() {
   echo -e "${GREEN}✓${NC}"
 }
 
-# Check if command exists
 command_exists() {
   local cmd="${1:-}"
   command -v "$cmd" >/dev/null 2>&1
@@ -90,7 +83,7 @@ detect_distro() {
     if command_exists pacman; then
         DISTRO="arch"
         PACKAGE_MANAGER="pacman"
-    elif command_exists apt; then
+    elif command_exists apt-get; then
         DISTRO="debian"
         PACKAGE_MANAGER="apt"
     elif command_exists dnf; then
@@ -127,7 +120,7 @@ install_package() {
             install_cmd="sudo pacman -S --noconfirm"
             ;;
         apt)
-            install_cmd="sudo apt install -y"
+            install_cmd="sudo apt-get install -y"
             ;;
         dnf)
             install_cmd="sudo dnf install -y"
@@ -144,13 +137,21 @@ install_package() {
     fi
 }
 
+# Improved mapping function
+get_mapped_package() {
+    local distro="$1"
+    local mapping="$2"
+    # Format: "arch:pkg1;debian:pkg2;rpm:pkg3"
+    echo "$mapping" | tr ';' '\n' | grep "^$distro:" | cut -d':' -f2
+}
+
 check_and_install_package() {
   local pkg_name="${1:-}"
   local pkg_map="${2:-}"
-  local pkg
+  local pkg=""
 
   if [[ -n "$pkg_map" ]]; then
-      pkg=$(echo "$pkg_map" | grep "^$DISTRO:" | cut -d':' -f2)
+      pkg=$(get_mapped_package "$DISTRO" "$pkg_map")
       if [[ -z "$pkg" ]]; then
           error "No package mapping found for '$pkg_name' on '$DISTRO' distribution."
       fi
@@ -166,22 +167,6 @@ check_and_install_package() {
   else
     success "$pkg is already installed!"
   fi
-}
-
-# Create a simple progress bar
-progress_bar() {
-  local duration="${1:-0}"
-  local msg="${2:-}"
-  local steps=20
-  local step_duration
-  step_duration=$(echo "$duration / $steps" | bc -l)
-  
-  echo -ne "${CYAN}→ ${NC}$msg ["
-  for ((i=0; i<steps; i++)); do
-    echo -ne "${BLUE}=${NC}"
-    sleep "$step_duration"
-  done
-  echo -e "] ${GREEN}✓${NC}"
 }
 
 # Animation for script start
@@ -203,118 +188,82 @@ start_animation() {
 # Main installation process
 # ===========================================
 
-# Display welcome animation
 start_animation
 
-# Detect distribution
 header "Checking System Compatibility"
 detect_distro
 success "Running on a $DISTRO-based distribution ($PACKAGE_MANAGER)"
 
-# Check for root permissions
 if [[ $EUID -eq 0 ]]; then
   error "This script should not be run as root. Please run as a normal user."
 fi
 
-# Set up trap for clean exit
 trap 'echo -e "\n${RED}Installation aborted.${NC}"; exit 1' INT TERM
 
-# Check and install system dependencies
 header "Checking System Dependencies"
 
-# Package mappings
-DEV_TOOLS_MAP="arch:base-devel:debian:build-essential:rpm:\"Development Tools\""
-XDG_UTILS_MAP="arch:xdg-utils:debian:xdg-utils:rpm:xdg-utils"
-DESKTOP_FILE_UTILS_MAP="arch:desktop-file-utils:debian:desktop-file-utils:rpm:desktop-file-utils"
+# Mappings (using semicolon as separator)
+DEV_TOOLS_MAP="arch:base-devel;debian:build-essential;rpm:Development Tools"
+XDG_UTILS_MAP="arch:xdg-utils;debian:xdg-utils;rpm:xdg-utils"
+DESKTOP_FILE_UTILS_MAP="arch:desktop-file-utils;debian:desktop-file-utils;rpm:desktop-file-utils"
 
-# Essential dependencies
 check_and_install_package "git"
 check_and_install_package "nodejs"
 check_and_install_package "npm"
 check_and_install_package "xdg-utils" "$XDG_UTILS_MAP"
 check_and_install_package "desktop-file-utils" "$DESKTOP_FILE_UTILS_MAP"
 
-if [[ "$PACKAGE_MANAGER" == "dnf" || "$PACKAGE_MANAGER" == "yum" ]]; then
+if [[ "$DISTRO" == "rpm" ]]; then
     info "Installing Development Tools group..."
-    if sudo "$PACKAGE_MANAGER" groupinstall -y "Development Tools"; then
-        success "Development Tools installed successfully!"
-    else
-        error "Failed to install Development Tools"
-    fi
+    sudo "$PACKAGE_MANAGER" groupinstall -y "Development Tools"
 else
     check_and_install_package "build-essential" "$DEV_TOOLS_MAP"
 fi
 
-
-# Verify Node.js and npm versions
-NODE_VERSION=$(node -v)
-NPM_VERSION=$(npm -v)
-
-info "Node.js version: $NODE_VERSION"
-info "npm version: $NPM_VERSION"
-
-# Comparing versions
-if [[ "${NODE_VERSION:1:2}" -lt 16 ]]; then
-  warning "Node.js version $NODE_VERSION might be too old. Consider updating to v16 or newer."
-fi
-
-# Install npm dependencies
 header "Installing Application Dependencies"
 
-# Check if we need to install dependencies
 if [[ ! -d "node_modules" ]]; then
-  info "Installing npm dependencies..."
-  npm install --silent & spinner $! "Installing runtime dependencies..."
+  info "Installing npm dependencies (this may take a minute)..."
+  npm install --no-audit --no-fund --silent & spinner $! "Installing runtime dependencies..."
   
-  info "Installing dev dependencies..."
-  npm install --silent --save-dev electron @electron/packager electron-builder & spinner $! "Installing development dependencies..."
+  info "Installing development dependencies..."
+  npm install --save-dev electron @electron/packager electron-builder --silent & spinner $! "Installing development dependencies..."
 else
-  info "Checking for dependency updates..."
+  info "Updating dependencies..."
   npm update --silent & spinner $! "Updating dependencies..."
 fi
 
-# Define script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-# Create launcher script
 header "Creating Launcher Script"
-
-info "Creating tiktok.sh launcher script..."
+info "Creating tiktok.sh launcher..."
 cat > "$SCRIPT_DIR/tiktok.sh" << EOF
 #!/bin/bash
-# TikTok Launcher
-echo "Starting TikTok Desktop..."
 cd "$SCRIPT_DIR" || exit 1
 export PATH=\$PATH:/usr/local/bin:/usr/bin
 npm start
 EOF
-
 chmod +x "$SCRIPT_DIR/tiktok.sh"
-success "Launcher script created and made executable"
+success "Launcher created"
 
-# Setup desktop integration
 header "Setting Up Desktop Integration"
-
-# Get absolute paths for use in desktop entries
 SCRIPT_ABS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 EXEC_PATH="$SCRIPT_ABS_DIR/tiktok.sh"
 LOCAL_ICON_PATH="$SCRIPT_ABS_DIR/icon.png"
 
-# Setup XDG local directories
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 APPLICATIONS_DIR="$XDG_DATA_HOME/applications"
 mkdir -p "$APPLICATIONS_DIR"
 
-# Install Icon properly using xdg-icon-resource (more reliable for GNOME/Debian)
 if command_exists xdg-icon-resource && [[ -f "$LOCAL_ICON_PATH" ]]; then
   info "Registering application icon..."
   xdg-icon-resource install --context apps --size 256 "$LOCAL_ICON_PATH" tiktok
   ICON_NAME="tiktok"
 else
+  info "Using local path for icon..."
   ICON_NAME="$LOCAL_ICON_PATH"
 fi
 
-# Create desktop file in current directory first
 DESKTOP_FILE_NAME="tiktok-desktop.desktop"
 TMP_DESKTOP_FILE="$SCRIPT_ABS_DIR/$DESKTOP_FILE_NAME"
 
@@ -333,108 +282,34 @@ Keywords=TikTok;Social;Media;Videos;Shorts;
 StartupWMClass=TikTok
 Version=1.0
 EOF
-
-# Set proper permissions for .desktop file (not executable)
 chmod 644 "$TMP_DESKTOP_FILE"
 
-# Register the desktop file using xdg-desktop-menu
 if command_exists xdg-desktop-menu; then
-  info "Installing desktop entry with xdg-desktop-menu..."
+  info "Installing menu entry..."
   xdg-desktop-menu install --mode user "$TMP_DESKTOP_FILE"
-  success "Desktop entry registered"
+  success "Menu entry installed"
 else
-  info "Falling back to manual copy of desktop entry..."
   cp "$TMP_DESKTOP_FILE" "$APPLICATIONS_DIR/$DESKTOP_FILE_NAME"
 fi
 
-# Create desktop shortcut using XDG specification
-XDG_DESKTOP_DIR="${XDG_DESKTOP_DIR:-$HOME/Desktop}"
-if [[ ! -d "$XDG_DESKTOP_DIR" ]]; then
-  if [[ -f "${XDG_CONFIG_HOME:-$HOME/.config}/user-dirs.dirs" ]]; then
-    source "${XDG_CONFIG_HOME:-$HOME/.config}/user-dirs.dirs"
-    XDG_DESKTOP_DIR="${XDG_DESKTOP_DIR:-$HOME/Desktop}"
-  fi
-fi
-
-if [[ -d "$XDG_DESKTOP_DIR" ]]; then
-  info "Creating desktop shortcut in $XDG_DESKTOP_DIR..."
-  cp "$TMP_DESKTOP_FILE" "$XDG_DESKTOP_DIR/$DESKTOP_FILE_NAME"
-  chmod 644 "$XDG_DESKTOP_DIR/$DESKTOP_FILE_NAME"
-fi
-
-# Force refresh of desktop database
 if command_exists update-desktop-database; then
   update-desktop-database "$APPLICATIONS_DIR" &>/dev/null || true
 fi
 
-# Force refresh of xdg-desktop-menu
-if command_exists xdg-desktop-menu; then
-  xdg-desktop-menu forceupdate &>/dev/null || true
-fi
-
-success "Desktop integration complete"
-
-# Setup terminal command
-header "Setting Up Terminal Command"
-
-info "Adding terminal command 'tiktok'..."
-
-# Determine shell and config file
+header "Finalizing"
+info "Setting up terminal alias..."
 SHELL_CONFIG=""
-if [[ "${SHELL:-}" == *"zsh"* ]]; then
-  SHELL_CONFIG="$HOME/.zshrc"
-elif [[ "${SHELL:-}" == *"bash"* ]]; then
-  SHELL_CONFIG="$HOME/.bashrc"
+if [[ "${SHELL:-}" == *"zsh"* ]]; then SHELL_CONFIG="$HOME/.zshrc"
+elif [[ "${SHELL:-}" == *"bash"* ]]; then SHELL_CONFIG="$HOME/.bashrc"
 fi
 
-if [[ -n "$SHELL_CONFIG" ]]; then
-  if ! grep -q "alias tiktok=" "$SHELL_CONFIG"; then
-    echo -e "\n# TikTok Desktop Application alias" >> "$SHELL_CONFIG"
-    echo "alias tiktok='$SCRIPT_DIR/tiktok.sh'" >> "$SHELL_CONFIG"
-    success "Terminal command 'tiktok' added to $SHELL_CONFIG"
-  else
-    info "Terminal command 'tiktok' already exists"
-  fi
+if [[ -n "$SHELL_CONFIG" ]] && ! grep -q "alias tiktok=" "$SHELL_CONFIG"; then
+    echo -e "\n# TikTok Alias\nalias tiktok='$SCRIPT_DIR/tiktok.sh'" >> "$SHELL_CONFIG"
+    success "Alias added to $SHELL_CONFIG"
 fi
 
-# Create a symlink in /usr/local/bin (requires sudo)
-if sudo ln -sf "$SCRIPT_DIR/tiktok.sh" /usr/local/bin/tiktok 2>/dev/null; then
-  sudo chmod +x /usr/local/bin/tiktok
-  success "System-wide 'tiktok' command created"
-fi
-
-# Validate installation
-header "Validating Installation"
-
-info "Performing post-installation checks..."
-
-if [[ ! -f "main.js" ]]; then
-  error "main.js not found. Installation may be corrupted."
-fi
-
-if [[ ! -x "tiktok.sh" ]]; then
-  error "tiktok.sh not found or not executable."
-fi
-
-if [[ ! -d "node_modules" ]]; then
-  error "Node modules not installed correctly."
-fi
-
-# All checks passed
 header "Installation Complete"
-echo -e "
-${GREEN}TikTok Desktop Application has been successfully installed!${NC}
-
-${BOLD}To start the application:${NC}
-  1. Type ${CYAN}tiktok${NC} in your terminal
-  2. Run ${CYAN}./tiktok.sh${NC} from this directory
-  3. Click the desktop shortcut on your Desktop
-  4. Use your desktop environment's application menu
-
-${BOLD}For updates:${NC}
-  Run this installer again to update dependencies
-
-${YELLOW}Note:${NC} Si el icono no aparece inmediatamente, reinicia tu sesión o el entorno de escritorio.
-"
+echo -e "${GREEN}TikTok Desktop se ha instalado correctamente.${NC}"
+echo -e "Si el icono no aparece, intenta reiniciar tu sesión."
 
 exit 0
