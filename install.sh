@@ -145,6 +145,9 @@ check_and_install_package() {
 
   if [[ -n "$pkg_map" ]]; then
       pkg=$(echo "$pkg_map" | grep "^$DISTRO:" | cut -d':' -f2)
+      if [[ -z "$pkg" ]]; then
+          error "No package mapping found for '$pkg_name' on '$DISTRO' distribution."
+      fi
   else
       pkg=$pkg_name
   fi
