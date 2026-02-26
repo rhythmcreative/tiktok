@@ -284,10 +284,10 @@ cat > "$SCRIPT_DIR/tiktok.sh" << EOF
 #!/bin/bash
 
 # This script runs the TikTok Electron app using npm start
-# It can be used for AUR and other package managers combined with libelectron
-
 echo "Starting TikTok..."
 cd "$SCRIPT_DIR" || exit 1
+# Ensure npm is in the PATH
+export PATH=\$PATH:/usr/local/bin:/usr/bin
 npm start
 EOF
 
@@ -304,20 +304,6 @@ LOCAL_ICON_PATH="$SCRIPT_ABS_DIR/icon.png"
 
 # Setup icons directory
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
-ICONS_DIR="$XDG_DATA_HOME/icons/hicolor/256x256/apps"
-mkdir -p "$ICONS_DIR"
-
-# Copy icon to a standard location if it exists
-if [[ -f "$LOCAL_ICON_PATH" ]]; then
-  info "Installing application icon..."
-  cp "$LOCAL_ICON_PATH" "$ICONS_DIR/tiktok.png"
-  ICON_NAME="tiktok"
-else
-  warning "Icon file not found at $LOCAL_ICON_PATH. Desktop entry may display without an icon."
-  ICON_NAME="video-x-generic"
-fi
-
-# Ensure applications directory exists
 APPLICATIONS_DIR="$XDG_DATA_HOME/applications"
 info "Ensuring applications directory exists at $APPLICATIONS_DIR"
 mkdir -p "$APPLICATIONS_DIR"
@@ -327,17 +313,18 @@ DESKTOP_FILE_NAME="tiktok-desktop.desktop"
 DESKTOP_PATH="$APPLICATIONS_DIR/$DESKTOP_FILE_NAME"
 
 info "Creating desktop entry..."
+# We use quotes around paths in case there are spaces
 cat > "$DESKTOP_PATH" << EOF
 [Desktop Entry]
 Type=Application
 Name=TikTok
 Comment=Make Your Day
 GenericName=Short-form Video Platform
-Exec=$EXEC_PATH
-Icon=$ICON_NAME
+Exec="$EXEC_PATH"
+Icon="$LOCAL_ICON_PATH"
 Terminal=false
-Categories=Network;Video;Social;InstantMessaging;
-Keywords=TikTok;Social Media;Videos;Shorts;Entertainment;
+Categories=Network;Video;Social;Internet;
+Keywords=TikTok;Social;Media;Videos;Shorts;
 StartupWMClass=TikTok
 Version=1.0
 EOF
@@ -345,10 +332,10 @@ EOF
 # Set proper permissions for .desktop file (not executable)
 chmod 644 "$DESKTOP_PATH"
 
-# Register the desktop file using xdg-desktop-menu
-if command_exists xdg-desktop-menu; then
-  info "Registering desktop entry with xdg-desktop-menu..."
-  xdg-desktop-menu install --mode user "$DESKTOP_PATH"
+# Validate and install desktop entry using system tools
+if command_exists desktop-file-install; then
+  info "Installing desktop entry with desktop-file-install..."
+  desktop-file-install --dir="$APPLICATIONS_DIR" "$DESKTOP_PATH"
 fi
 
 # Create desktop shortcut using XDG specification
@@ -365,23 +352,19 @@ if [[ -d "$XDG_DESKTOP_DIR" ]]; then
   DESKTOP_SHORTCUT="$XDG_DESKTOP_DIR/$DESKTOP_FILE_NAME"
   cp "$DESKTOP_PATH" "$DESKTOP_SHORTCUT"
   chmod 644 "$DESKTOP_SHORTCUT"
-  # Some desktop environments require the executable bit for desktop shortcuts to work
-  # but xdg spec says they shouldn't. We'll stick to 644 but note it.
 fi
 
-# Update desktop and icon databases
+# Update desktop database
 if command_exists update-desktop-database; then
+  info "Updating desktop database..."
   update-desktop-database "$APPLICATIONS_DIR" &>/dev/null
-fi
-
-if command_exists gtk-update-icon-cache; then
-  gtk-update-icon-cache -f -t "$XDG_DATA_HOME/icons/hicolor" &>/dev/null || true
 fi
 
 # Notify the desktop environment using DBus
 if command_exists dbus-send; then
+  info "Notifying desktop environment..."
   dbus-send --session --type=method_call --dest=org.freedesktop.DBus \
-    /org/freedesktop/DBus org.freedesktop.DBus.ReloadConfig >/dev/null 2>&1
+    /org/freedesktop/DBus org.freedesktop.DBus.ReloadConfig >/dev/null 2>&1 || true
 fi
 
 success "Desktop integration complete"

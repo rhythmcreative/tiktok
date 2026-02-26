@@ -30,11 +30,15 @@ import('electron-context-menu').then((contextMenuModule) => {
 let mainWindow;
 
 function createWindow () {
+  // Set the app user model id (for Windows and some Linux DEs)
+  app.setAppUserModelId('TikTok');
+  
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 1360,
     height: 765,
-    icon: __dirname + '/icon.png',
+    title: 'TikTok',
+    icon: path.join(__dirname, 'icon.png'),
     backgroundColor: '#2C2C2C',
     webPreferences: {
      contextIsolation: true,
