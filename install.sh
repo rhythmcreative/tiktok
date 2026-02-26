@@ -1,7 +1,7 @@
 #!/bin/bash
 # TikTok Desktop Application Installer
 # This script installs the TikTok desktop application with all dependencies
-# Works on Arch Linux and other pacman-based distributions
+# Works on Arch, Debian/Ubuntu, and Fedora/RHEL based distributions
 
 # Enable strict mode
 set -euo pipefail
@@ -74,23 +74,86 @@ command_exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
-# Check if package is installed via pacman
-is_package_installed() {
-  pacman -Qi "$1" >/dev/null 2>&1
+# ===========================================
+# System and Package Manager Detection
+# ===========================================
+PACKAGE_MANAGER=""
+DISTRO=""
+
+detect_distro() {
+    if command_exists pacman; then
+        DISTRO="arch"
+        PACKAGE_MANAGER="pacman"
+    elif command_exists apt; then
+        DISTRO="debian"
+        PACKAGE_MANAGER="apt"
+    elif command_exists dnf; then
+        DISTRO="rpm"
+        PACKAGE_MANAGER="dnf"
+    elif command_exists yum; then
+        DISTRO="rpm"
+        PACKAGE_MANAGER="yum"
+    else
+        error "Unsupported distribution. This script supports Arch, Debian/Ubuntu, and Fedora/RHEL based distributions."
+    fi
 }
 
-# Check and install required system packages
+is_package_installed() {
+    local pkg=$1
+    case "$PACKAGE_MANAGER" in
+        pacman)
+            pacman -Qi "$pkg" &>/dev/null
+            ;;
+        apt)
+            dpkg -s "$pkg" &>/dev/null
+            ;;
+        dnf|yum)
+            rpm -q "$pkg" &>/dev/null
+            ;;
+    esac
+}
+
+install_package() {
+    local pkg=$1
+    local install_cmd=""
+    case "$PACKAGE_MANAGER" in
+        pacman)
+            install_cmd="sudo pacman -S --noconfirm"
+            ;;
+        apt)
+            install_cmd="sudo apt install -y"
+            ;;
+        dnf)
+            install_cmd="sudo dnf install -y"
+            ;;
+        yum)
+            install_cmd="sudo yum install -y"
+            ;;
+    esac
+
+    if $install_cmd "$pkg"; then
+        success "$pkg installed successfully!"
+    else
+        error "Failed to install $pkg"
+    fi
+}
+
 check_and_install_package() {
-  local pkg=$1
+  local pkg_name=$1
+  local pkg_map=$2
+  local pkg
+
+  if [[ -n "$pkg_map" ]]; then
+      pkg=$(echo "$pkg_map" | grep "^$DISTRO:" | cut -d':' -f2)
+  else
+      pkg=$pkg_name
+  fi
+
   info "Checking for $pkg..."
   
   if ! is_package_installed "$pkg"; then
     warning "$pkg is not installed. Installing..."
-    if sudo pacman -S --noconfirm "$pkg"; then
-      success "$pkg installed successfully!"
-    else
-      error "Failed to install $pkg"
-    fi
+    install_package "$pkg"
   else
     success "$pkg is already installed!"
   fi
@@ -100,7 +163,8 @@ check_and_install_package() {
 progress_bar() {
   local duration=$1
   local steps=20
-  local step_duration=$(echo "$duration / $steps" | bc -l)
+  local step_duration
+  step_duration=$(echo "$duration / $steps" | bc -l)
   
   echo -ne "${CYAN}→ ${NC}$2 ["
   for ((i=0; i<steps; i++)); do
@@ -132,13 +196,10 @@ start_animation() {
 # Display welcome animation
 start_animation
 
-# Check if we're running on Arch Linux
+# Detect distribution
 header "Checking System Compatibility"
-if [[ -f /etc/arch-release ]] || command_exists pacman; then
-  success "Running on Arch Linux or compatible distribution"
-else
-  warning "This script is optimized for Arch Linux. Some features may not work correctly."
-fi
+detect_distro
+success "Running on a $DISTRO-based distribution ($PACKAGE_MANAGER)"
 
 # Check for root permissions
 if [[ $EUID -eq 0 ]]; then
@@ -151,10 +212,24 @@ trap 'echo -e "\n${RED}Installation aborted.${NC}"; exit 1' INT TERM
 # Check and install system dependencies
 header "Checking System Dependencies"
 
+# Package mappings
+DEV_TOOLS_MAP="arch:base-devel:debian:build-essential:rpm:\"Development Tools\""
+
 # Essential dependencies
-for pkg in git nodejs npm base-devel; do
-  check_and_install_package "$pkg"
-done
+check_and_install_package "git"
+check_and_install_package "nodejs"
+check_and_install_package "npm"
+if [[ "$PACKAGE_MANAGER" == "dnf" || "$PACKAGE_MANAGER" == "yum" ]]; then
+    info "Installing Development Tools group..."
+    if sudo "$PACKAGE_MANAGER" groupinstall -y "Development Tools"; then
+        success "Development Tools installed successfully!"
+    else
+        error "Failed to install Development Tools"
+    fi
+else
+    check_and_install_package "build-essential" "$DEV_TOOLS_MAP"
+fi
+
 
 # Verify Node.js and npm versions
 NODE_VERSION=$(node -v)
@@ -394,4 +469,3 @@ ${YELLOW}Note:${NC} If you encounter any issues, please report them at the repos
 "
 
 exit 0
-
