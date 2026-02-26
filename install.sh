@@ -282,11 +282,9 @@ header "Creating Launcher Script"
 info "Creating tiktok.sh launcher script..."
 cat > "$SCRIPT_DIR/tiktok.sh" << EOF
 #!/bin/bash
-
-# This script runs the TikTok Electron app using npm start
-echo "Starting TikTok..."
+# TikTok Launcher
+echo "Starting TikTok Desktop..."
 cd "$SCRIPT_DIR" || exit 1
-# Ensure npm is in the PATH
 export PATH=\$PATH:/usr/local/bin:/usr/bin
 npm start
 EOF
@@ -302,40 +300,51 @@ SCRIPT_ABS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 EXEC_PATH="$SCRIPT_ABS_DIR/tiktok.sh"
 LOCAL_ICON_PATH="$SCRIPT_ABS_DIR/icon.png"
 
-# Setup icons directory
+# Setup XDG local directories
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 APPLICATIONS_DIR="$XDG_DATA_HOME/applications"
-info "Ensuring applications directory exists at $APPLICATIONS_DIR"
 mkdir -p "$APPLICATIONS_DIR"
 
-# Create desktop file
+# Install Icon properly using xdg-icon-resource (more reliable for GNOME/Debian)
+if command_exists xdg-icon-resource && [[ -f "$LOCAL_ICON_PATH" ]]; then
+  info "Registering application icon..."
+  xdg-icon-resource install --context apps --size 256 "$LOCAL_ICON_PATH" tiktok
+  ICON_NAME="tiktok"
+else
+  ICON_NAME="$LOCAL_ICON_PATH"
+fi
+
+# Create desktop file in current directory first
 DESKTOP_FILE_NAME="tiktok-desktop.desktop"
-DESKTOP_PATH="$APPLICATIONS_DIR/$DESKTOP_FILE_NAME"
+TMP_DESKTOP_FILE="$SCRIPT_ABS_DIR/$DESKTOP_FILE_NAME"
 
 info "Creating desktop entry..."
-# We use quotes around paths in case there are spaces
-cat > "$DESKTOP_PATH" << EOF
+cat > "$TMP_DESKTOP_FILE" << EOF
 [Desktop Entry]
 Type=Application
 Name=TikTok
-Comment=Make Your Day
-GenericName=Short-form Video Platform
+Comment=TikTok Desktop Application
+GenericName=Social Media Client
 Exec="$EXEC_PATH"
-Icon="$LOCAL_ICON_PATH"
+Icon=$ICON_NAME
 Terminal=false
-Categories=Network;Video;Social;Internet;
+Categories=Network;AudioVideo;
 Keywords=TikTok;Social;Media;Videos;Shorts;
 StartupWMClass=TikTok
 Version=1.0
 EOF
 
 # Set proper permissions for .desktop file (not executable)
-chmod 644 "$DESKTOP_PATH"
+chmod 644 "$TMP_DESKTOP_FILE"
 
-# Validate and install desktop entry using system tools
-if command_exists desktop-file-install; then
-  info "Installing desktop entry with desktop-file-install..."
-  desktop-file-install --dir="$APPLICATIONS_DIR" "$DESKTOP_PATH"
+# Register the desktop file using xdg-desktop-menu
+if command_exists xdg-desktop-menu; then
+  info "Installing desktop entry with xdg-desktop-menu..."
+  xdg-desktop-menu install --mode user "$TMP_DESKTOP_FILE"
+  success "Desktop entry registered"
+else
+  info "Falling back to manual copy of desktop entry..."
+  cp "$TMP_DESKTOP_FILE" "$APPLICATIONS_DIR/$DESKTOP_FILE_NAME"
 fi
 
 # Create desktop shortcut using XDG specification
@@ -349,22 +358,18 @@ fi
 
 if [[ -d "$XDG_DESKTOP_DIR" ]]; then
   info "Creating desktop shortcut in $XDG_DESKTOP_DIR..."
-  DESKTOP_SHORTCUT="$XDG_DESKTOP_DIR/$DESKTOP_FILE_NAME"
-  cp "$DESKTOP_PATH" "$DESKTOP_SHORTCUT"
-  chmod 644 "$DESKTOP_SHORTCUT"
+  cp "$TMP_DESKTOP_FILE" "$XDG_DESKTOP_DIR/$DESKTOP_FILE_NAME"
+  chmod 644 "$XDG_DESKTOP_DIR/$DESKTOP_FILE_NAME"
 fi
 
-# Update desktop database
+# Force refresh of desktop database
 if command_exists update-desktop-database; then
-  info "Updating desktop database..."
-  update-desktop-database "$APPLICATIONS_DIR" &>/dev/null
+  update-desktop-database "$APPLICATIONS_DIR" &>/dev/null || true
 fi
 
-# Notify the desktop environment using DBus
-if command_exists dbus-send; then
-  info "Notifying desktop environment..."
-  dbus-send --session --type=method_call --dest=org.freedesktop.DBus \
-    /org/freedesktop/DBus org.freedesktop.DBus.ReloadConfig >/dev/null 2>&1 || true
+# Force refresh of xdg-desktop-menu
+if command_exists xdg-desktop-menu; then
+  xdg-desktop-menu forceupdate &>/dev/null || true
 fi
 
 success "Desktop integration complete"
@@ -429,7 +434,7 @@ ${BOLD}To start the application:${NC}
 ${BOLD}For updates:${NC}
   Run this installer again to update dependencies
 
-${YELLOW}Note:${NC} If you encounter any issues, please report them at the repository.
+${YELLOW}Note:${NC} Si el icono no aparece inmediatamente, reinicia tu sesión o el entorno de escritorio.
 "
 
 exit 0

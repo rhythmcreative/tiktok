@@ -27,12 +27,13 @@ import('electron-context-menu').then((contextMenuModule) => {
   });
 });
 
+// and load the index.html of the app.
 let mainWindow;
 
+// Set the app user model id as early as possible
+app.setAppUserModelId('TikTok');
+
 function createWindow () {
-  // Set the app user model id (for Windows and some Linux DEs)
-  app.setAppUserModelId('TikTok');
-  
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 1360,
