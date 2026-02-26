@@ -257,8 +257,9 @@ mkdir -p "$APPLICATIONS_DIR"
 
 if command_exists xdg-icon-resource && [[ -f "$LOCAL_ICON_PATH" ]]; then
   info "Registering application icon..."
-  xdg-icon-resource install --context apps --size 256 "$LOCAL_ICON_PATH" tiktok
-  ICON_NAME="tiktok"
+  # Use tiktok-tiktok to avoid 'unbound vendor prefix' error in Debian/Ubuntu
+  xdg-icon-resource install --context apps --size 256 "$LOCAL_ICON_PATH" tiktok-tiktok
+  ICON_NAME="tiktok-tiktok"
 else
   info "Using local path for icon..."
   ICON_NAME="$LOCAL_ICON_PATH"
