@@ -64,6 +64,29 @@ After installation, you can launch the application in several ways:
 2. **Desktop Shortcut:** Click the TikTok icon on your desktop.
 3. **Terminal:** Just type `tiktok`.
 
+## 🗑️ Uninstallation
+
+To remove the application and all its components (icon, menu entry, terminal alias, and local data):
+
+```bash
+chmod +x uninstall.sh
+./uninstall.sh
+```
+
+## 🛠️ Troubleshooting
+
+### App doesn't start (Nothing happens)
+Run `tiktok` from a terminal to see the error output. The most common cause is missing system libraries. The `install.sh` script attempts to install these automatically for Arch, Debian/Ubuntu, and Fedora.
+
+### Blank screen on startup
+This usually means the app failed to load the TikTok website (usually due to no internet connection). We've added a retry button and error message for these cases.
+
+### Visual glitches or performance issues
+Wayland support is enabled by default. If you experience issues (especially on NVIDIA), you can try running with GPU disabled by running:
+```bash
+npm start -- --disable-gpu
+```
+
 ## 🛰️ Screenshots
 
 ![alt text](image.png)

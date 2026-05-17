@@ -4,9 +4,25 @@ const path = require('path');
 const fs = require('fs');
 const https = require('https');
 
-// Dynamically import electron-context-menu (default export)
-import('electron-context-menu').then((contextMenuModule) => {
-  const contextMenu = contextMenuModule.default;
+// Single Instance Lock
+const additionalData = { myKey: 'tiktok-desktop' };
+const gotTheLock = app.requestSingleInstanceLock(additionalData);
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory, additionalData) => {
+    // Someone tried to run a second instance, we should focus our window.
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+
+  // Dynamically import electron-context-menu (default export)
+  import('electron-context-menu').then((contextMenuModule) => {
+    const contextMenu = contextMenuModule.default;
+...
 
   contextMenu({
     prepend: (defaultActions, parameters, browserWindow) => [
@@ -35,7 +51,7 @@ app.setAppUserModelId('TikTok');
 
 function createWindow () {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1360,
     height: 765,
     title: 'TikTok',
@@ -50,9 +66,24 @@ function createWindow () {
 
   // and load the index.html of the app.
   mainWindow.loadFile('splash.html')
-  setTimeout(function () {
-    mainWindow.loadURL('https://www.tiktok.com/',{ userAgent: "Mozilla/5.0 (TikTok-Desktop) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"});
-  }, 3000) // Load store page after 3 secs
+  
+  const loadTikTok = () => {
+    mainWindow.loadURL('https://www.tiktok.com/', { 
+      userAgent: "Mozilla/5.0 (TikTok-Desktop) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+    }).catch(e => {
+      console.error('Failed to load TikTok:', e);
+      // Show a simple error message if loading fails
+      mainWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(`
+        <body style="background:#121212;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
+          <h2>Failed to load TikTok</h2>
+          <p>Please check your internet connection and try again.</p>
+          <button onclick="location.href='https://www.tiktok.com/'" style="padding:10px 20px;background:#ff0050;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;">Retry</button>
+        </body>
+      `));
+    });
+  };
+
+  setTimeout(loadTikTok, 3000) // Load page after 3 secs
   mainWindow.maximize() // start maximized
   mainWindow.setMenuBarVisibility(false)
   mainWindow.setMenu(null)
@@ -86,3 +117,4 @@ app.on('activate', function () {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+}

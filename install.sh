@@ -207,6 +207,29 @@ DEV_TOOLS_MAP="arch:base-devel;debian:build-essential;rpm:Development Tools"
 XDG_UTILS_MAP="arch:xdg-utils;debian:xdg-utils;rpm:xdg-utils"
 DESKTOP_FILE_UTILS_MAP="arch:desktop-file-utils;debian:desktop-file-utils;rpm:desktop-file-utils"
 
+# Electron System Libraries
+# Arch: nss at-spi2-core libcups libdrm gtk3 mesa alsa-lib libxcomposite libxdamage libxrandr libxkbcommon pango cairo
+# Debian: libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libgtk-3-0 libgbm1 libasound2 libxcomposite1 libxdamage1 libxrandr2 libxkbcommon0 libpango-1.0-0 libcairo2
+# Fedora: nss at-spi2-atk libcups libdrm gtk3 mesa-libgbm alsa-lib libXcomposite libXdamage libXrandr libxkbcommon pango cairo
+
+ELECTRON_DEPS_ARCH="nss at-spi2-core libcups libdrm gtk3 mesa alsa-lib libxcomposite libxdamage libxrandr libxkbcommon pango cairo"
+ELECTRON_DEPS_DEBIAN="libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libgtk-3-0 libgbm1 libasound2 libxcomposite1 libxdamage1 libxrandr2 libxkbcommon0 libpango-1.0-0 libcairo2"
+ELECTRON_DEPS_RPM="nss at-spi2-atk libcups libdrm gtk3 mesa-libgbm alsa-lib libXcomposite libXdamage libXrandr libxkbcommon pango cairo"
+
+info "Installing system libraries required by Electron..."
+case "$DISTRO" in
+    arch)
+        sudo pacman -S --needed --noconfirm $ELECTRON_DEPS_ARCH
+        ;;
+    debian)
+        sudo apt-get update
+        sudo apt-get install -y $ELECTRON_DEPS_DEBIAN
+        ;;
+    rpm)
+        sudo $PACKAGE_MANAGER install -y $ELECTRON_DEPS_RPM
+        ;;
+esac
+
 check_and_install_package "git"
 check_and_install_package "nodejs"
 check_and_install_package "npm"

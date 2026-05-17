@@ -5,7 +5,7 @@
   "description": "Unofficial TikTok desktop application.",
   "main": "main.js",
   "scripts": {
-    "start": "electron . --disable-gpu --disable-software-rasterizer --ozone-platform-hint=auto"
+    "start": "electron . --ozone-platform-hint=auto --enable-features=WaylandWindowDecorations"
   },
   "repository": {
     "url": "https://gitlab.com/tiktokdesktop.git"
