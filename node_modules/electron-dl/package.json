@@ -1,0 +1,65 @@
+{
+	"name": "electron-dl",
+	"version": "4.0.0",
+	"description": "Simplified file downloads for your Electron app",
+	"license": "MIT",
+	"repository": "sindresorhus/electron-dl",
+	"funding": "https://github.com/sponsors/sindresorhus",
+	"author": {
+		"name": "Sindre Sorhus",
+		"email": "sindresorhus@gmail.com",
+		"url": "https://sindresorhus.com"
+	},
+	"type": "module",
+	"exports": {
+		"types": "./index.d.ts",
+		"default": "./index.js"
+	},
+	"sideEffects": false,
+	"engines": {
+		"node": ">=18"
+	},
+	"scripts": {
+		"start": "electron run.js",
+		"//test": "xo && ava && tsc index.d.ts",
+		"test": "xo && tsc index.d.ts"
+	},
+	"files": [
+		"index.js",
+		"index.d.ts"
+	],
+	"keywords": [
+		"electron",
+		"app",
+		"file",
+		"download",
+		"downloader",
+		"progress"
+	],
+	"dependencies": {
+		"ext-name": "^5.0.0",
+		"pupa": "^3.1.0",
+		"unused-filename": "^4.0.1"
+	},
+	"devDependencies": {
+		"@types/node": "^20.12.7",
+		"ava": "^6.1.2",
+		"copy-file": "^11.0.0",
+		"electron": "^30.0.1",
+		"minimist": "^1.2.8",
+		"node-static": "^0.7.11",
+		"pify": "^6.1.0",
+		"spectron": "^19.0.0",
+		"typescript": "^5.4.5",
+		"xo": "^0.58.0"
+	},
+	"xo": {
+		"envs": [
+			"node",
+			"browser"
+		]
+	},
+	"ava": {
+		"serial": true
+	}
+}
