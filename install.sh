@@ -233,21 +233,31 @@ else
   npm update --silent & spinner $! "Updating dependencies..."
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+SCRIPT_ABS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
 header "Creating Launcher Script"
 info "Creating tiktok.sh launcher..."
-cat > "$SCRIPT_DIR/tiktok.sh" << EOF
+cat > "$SCRIPT_ABS_DIR/tiktok.sh" << EOF
 #!/bin/bash
-cd "$SCRIPT_DIR" || exit 1
-export PATH=\$PATH:/usr/local/bin:/usr/bin
+# TikTok Launcher with error checking
+SCRIPT_DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+cd "\$SCRIPT_DIR" || exit 1
+
+if [ ! -d "node_modules" ]; then
+    echo "Error: Application dependencies not found. Please run './install.sh' first."
+    if command -v notify-send &>/dev/null; then
+        notify-send "TikTok Desktop" "Error: Dependencies not found. Please run install.sh"
+    fi
+    exit 1
+fi
+
+export PATH=\$PATH:/usr/local/bin:/usr/bin:/bin
 npm start
 EOF
-chmod +x "$SCRIPT_DIR/tiktok.sh"
+chmod +x "$SCRIPT_ABS_DIR/tiktok.sh"
 success "Launcher created"
 
 header "Setting Up Desktop Integration"
-SCRIPT_ABS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 EXEC_PATH="$SCRIPT_ABS_DIR/tiktok.sh"
 LOCAL_ICON_PATH="$SCRIPT_ABS_DIR/icon.png"
 
@@ -305,12 +315,16 @@ elif [[ "${SHELL:-}" == *"bash"* ]]; then SHELL_CONFIG="$HOME/.bashrc"
 fi
 
 if [[ -n "$SHELL_CONFIG" ]] && ! grep -q "alias tiktok=" "$SHELL_CONFIG"; then
-    echo -e "\n# TikTok Alias\nalias tiktok='$SCRIPT_DIR/tiktok.sh'" >> "$SHELL_CONFIG"
+    echo -e "\n# TikTok Alias\nalias tiktok='$SCRIPT_ABS_DIR/tiktok.sh'" >> "$SHELL_CONFIG"
     success "Alias added to $SHELL_CONFIG"
 fi
+
+chmod +x "$SCRIPT_ABS_DIR/uninstall.sh"
+success "Uninstaller prepared (run ./uninstall.sh to remove)"
 
 header "Installation Complete"
 echo -e "${GREEN}TikTok Desktop se ha instalado correctamente.${NC}"
 echo -e "Si el icono no aparece, intenta reiniciar tu sesión."
+echo -e "Puedes ejecutarlo escribiendo ${BOLD}tiktok${NC} en la terminal (después de reiniciar terminal)."
 
 exit 0
