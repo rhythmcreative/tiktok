@@ -223,7 +223,21 @@ case "$DISTRO" in
         ;;
     debian)
         sudo apt-get update
-        sudo apt-get install -y $ELECTRON_DEPS_DEBIAN
+        # Handle t64 transition in newer Debian/Ubuntu (like Ubuntu 24.04+)
+        # We try to install the standard list, but specifically check for libasound2t64
+        DEPS_TO_INSTALL=""
+        for dep in $ELECTRON_DEPS_DEBIAN; do
+            if [[ "$dep" == "libasound2" ]]; then
+                if apt-cache show libasound2t64 &>/dev/null; then
+                    DEPS_TO_INSTALL="$DEPS_TO_INSTALL libasound2t64"
+                else
+                    DEPS_TO_INSTALL="$DEPS_TO_INSTALL libasound2"
+                fi
+            else
+                DEPS_TO_INSTALL="$DEPS_TO_INSTALL $dep"
+            fi
+        done
+        sudo apt-get install -y $DEPS_TO_INSTALL
         ;;
     rpm)
         sudo $PACKAGE_MANAGER install -y $ELECTRON_DEPS_RPM
