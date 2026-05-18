@@ -345,23 +345,29 @@ if command_exists update-desktop-database; then
 fi
 
 header "Finalizing"
-info "Setting up terminal alias..."
-SHELL_CONFIG=""
-if [[ "${SHELL:-}" == *"zsh"* ]]; then SHELL_CONFIG="$HOME/.zshrc"
-elif [[ "${SHELL:-}" == *"bash"* ]]; then SHELL_CONFIG="$HOME/.bashrc"
-fi
+info "Setting up global command..."
+# Create a symlink in /usr/local/bin for global access
+if sudo ln -sf "$SCRIPT_ABS_DIR/tiktok.sh" /usr/local/bin/tiktok; then
+    success "Global command 'tiktok' created in /usr/local/bin"
+else
+    warning "Failed to create global symlink. Falling back to alias..."
+    SHELL_CONFIG=""
+    if [[ "${SHELL:-}" == *"zsh"* ]]; then SHELL_CONFIG="$HOME/.zshrc"
+    elif [[ "${SHELL:-}" == *"bash"* ]]; then SHELL_CONFIG="$HOME/.bashrc"
+    fi
 
-if [[ -n "$SHELL_CONFIG" ]] && ! grep -q "alias tiktok=" "$SHELL_CONFIG"; then
-    echo -e "\n# TikTok Alias\nalias tiktok='$SCRIPT_ABS_DIR/tiktok.sh'" >> "$SHELL_CONFIG"
-    success "Alias added to $SHELL_CONFIG"
+    if [[ -n "$SHELL_CONFIG" ]] && ! grep -q "alias tiktok=" "$SHELL_CONFIG"; then
+        echo -e "\n# TikTok Alias\nalias tiktok='$SCRIPT_ABS_DIR/tiktok.sh'" >> "$SHELL_CONFIG"
+        success "Alias added to $SHELL_CONFIG"
+    fi
 fi
 
 chmod +x "$SCRIPT_ABS_DIR/uninstall.sh"
 success "Uninstaller prepared (run ./uninstall.sh to remove)"
 
 header "Installation Complete"
-echo -e "${GREEN}TikTok Desktop se ha instalado correctamente.${NC}"
-echo -e "Si el icono no aparece, intenta reiniciar tu sesión."
-echo -e "Puedes ejecutarlo escribiendo ${BOLD}tiktok${NC} en la terminal (después de reiniciar terminal)."
+echo -e "${GREEN}TikTok Desktop has been installed successfully.${NC}"
+echo -e "If the icon doesn't appear, try restarting your session."
+echo -e "You can launch it by typing ${BOLD}tiktok${NC} in your terminal."
 
 exit 0

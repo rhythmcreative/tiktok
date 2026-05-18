@@ -43,8 +43,13 @@ if command -v xdg-icon-resource &>/dev/null; then
     success "Icon uninstalled"
 fi
 
-# 3. Remove alias
-info "Removing terminal alias..."
+# 3. Remove command and alias
+info "Removing terminal command and alias..."
+if [ -L "/usr/local/bin/tiktok" ]; then
+    sudo rm "/usr/local/bin/tiktok"
+    success "Removed global command from /usr/local/bin"
+fi
+
 for CONFIG in "$HOME/.bashrc" "$HOME/.zshrc"; do
     if [ -f "$CONFIG" ]; then
         if grep -q "alias tiktok=" "$CONFIG"; then
