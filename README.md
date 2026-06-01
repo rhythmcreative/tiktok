@@ -43,7 +43,7 @@ chmod +x uninstall.sh
 ./uninstall.sh
 ```
 
-## 🛰️ Screenshots
+## Screenshots
 
 ![alt text](image.png)
 
