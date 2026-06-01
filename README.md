@@ -14,7 +14,7 @@
 </p>
 
 
-### 🛠️ How to install:
+### How to install:
 
 To install, clone the repository and run the `install.sh` script:
 
