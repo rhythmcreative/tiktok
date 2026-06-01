@@ -13,37 +13,8 @@
   I created this because in waydroid i cant use tiktok so I created tiktok for linux 🔥🔥✅
 </p>
 
-## 📋 Table of Contents
 
-- [🚀 Project Overview](#-project-overview)
-- [✨ Features](#-features)
-- [📥 Installation](#-installation)
-- [🔧 Usage](#-usage)
-
-
-## 🚀 Project Overview
-
-TikTok Desktop is an open-source application that brings the TikTok experience to your Linux desktop. Built with performance and user experience in mind, it offers a clean interface for browsing TikTok content, creating videos, and interacting with the TikTok community without the limitations of a mobile device.
-
-## ✨ Features
-
-- **Multi-Distro Support:** Optimized for Arch, Debian, Ubuntu, Fedora, and more.
-- **Native Desktop Integration:** Proper icons and menu entries for GNOME, KDE, XFCE, etc.
-- **Enhanced Video Viewing:** Experience TikTok on larger screens.
-- **System Commands:** Launch easily via terminal using `tiktok`.
-- **Keyboard Shortcuts:** Efficient navigation through content.
-- **Dark Mode:** Native dark interface support.
-
-## 📥 Installation
-
-The installer is designed to be universal for major Linux distributions. It will automatically detect your package manager and install the necessary dependencies (Git, Node.js, npm, and build tools).
-
-### Supported Systems:
-- **Arch Linux / Manjaro / EndeavourOS**
-- **Debian / Ubuntu / Linux Mint / Pop!_OS**
-- **Fedora / RHEL / CentOS / Rocky Linux**
-
-### 🛠️ How to Install:
+### 🛠️ How to install:
 
 To install, clone the repository and run the `install.sh` script:
 
@@ -55,36 +26,21 @@ chmod +x install.sh
 ```
 
 > [!IMPORTANT]
-> **Run the script as a normal user**. The script will use `sudo` automatically only when it needs to install system packages. **Do not run it with `sudo ./install.sh`** as it might cause permission issues with your local configuration.
+> **Run the script as a normal user**. The script will use `sudo` automatically only when it needs to install system packages. **Do not run it with `sudo ./install.sh`** as it might cause permission issues with your local configuration. 
 
-## 🔧 Usage
 
 After installation, you can launch the application in several ways:
-1. **Application Menu:** Search for "TikTok" in your apps.
-2. **Desktop Shortcut:** Click the TikTok icon on your desktop.
+1. **Application menu:** Search for "TikTok" in your apps.
+2. **Desktop shortcut:** Click the TikTok icon on your desktop.
 3. **Terminal:** Just type `tiktok`.
 
-## 🗑️ Uninstallation
+## Uninstallation
 
 To remove the application and all its components (icon, menu entry, terminal alias, and local data):
 
 ```bash
 chmod +x uninstall.sh
 ./uninstall.sh
-```
-
-## 🛠️ Troubleshooting
-
-### App doesn't start (Nothing happens)
-Run `tiktok` from a terminal to see the error output. The most common cause is missing system libraries. The `install.sh` script attempts to install these automatically for Arch, Debian/Ubuntu, and Fedora.
-
-### Blank screen on startup
-This usually means the app failed to load the TikTok website (usually due to no internet connection). We've added a retry button and error message for these cases.
-
-### Visual glitches or performance issues
-Wayland support is enabled by default. If you experience issues (especially on NVIDIA), you can try running with GPU disabled by running:
-```bash
-npm start -- --disable-gpu
 ```
 
 ## 🛰️ Screenshots
