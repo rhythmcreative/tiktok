@@ -1,4 +1,4 @@
-<h1 align="center">TikTok Desktop</h1>
+<h1 align="center">TikTok for Linux</h1>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Linux-red?style=flat-square&logo=linux" alt="Platform">
