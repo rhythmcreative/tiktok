@@ -19,7 +19,6 @@ To install, clone the repository and run the `install.sh` script:
 ```bash
 git clone https://github.com/rhythmcreative/tiktok.git
 cd tiktok
-chmod +x install.sh
 ./install.sh
 ```
 
