@@ -41,7 +41,9 @@ chmod +x uninstall.sh
 ```
 
 [![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&pause=1000&color=F7F7F7&vCenter=true&multiline=true&width=435&height=35&lines=DEMO)](https://git.io/typing-svg)
-
-![alt text](image.png)
+<div align="center">
+<img width="480" height="270" alt="output" src="https://github.com/user-attachments/assets/243eac7d-cc3f-4fb0-a6bc-6575b9efad3e" />
+ <p><i>This is only a Demo nothing more.</i></p>
+</div>
 
 
