@@ -270,6 +270,25 @@ else
   npm update --silent & spinner $! "Updating dependencies..."
 fi
 
+# Ensure Electron binary is correctly installed
+if [[ -d "node_modules/electron" ]]; then
+    info "Verifying Electron binary..."
+    if ! ./node_modules/.bin/electron -v &>/dev/null; then
+        warning "Electron binary missing or corrupted. Attempting manual fix..."
+        # Try to run the install script directly
+        if [[ -f "node_modules/electron/install.js" ]]; then
+            node node_modules/electron/install.js || true
+        fi
+        
+        # If still missing, try to force install
+        if ! ./node_modules/.bin/electron -v &>/dev/null; then
+            info "Running npm rebuild electron..."
+            npm rebuild electron --silent || true
+        fi
+    fi
+    success "Electron environment checked"
+fi
+
 SCRIPT_ABS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
 header "Creating Launcher Script"
@@ -277,7 +296,7 @@ info "Creating tiktok.sh launcher..."
 cat > "$SCRIPT_ABS_DIR/tiktok.sh" << EOF
 #!/bin/bash
 # TikTok Launcher with error checking
-SCRIPT_DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+SCRIPT_DIR="\$(cd "\$(dirname "\$(readlink -f "\${BASH_SOURCE[0]}")")" &>/dev/null && pwd)"
 cd "\$SCRIPT_DIR" || exit 1
 
 if [ ! -d "node_modules" ]; then
