@@ -36,7 +36,6 @@ After installation, you can launch the application in several ways:
 To remove the application and all its components (icon, menu entry, terminal alias, and local data) use this script:
 
 ```bash
-chmod +x uninstall.sh
 ./uninstall.sh
 ```
 
