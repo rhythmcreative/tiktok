@@ -1,20 +1,17 @@
 <h1 align="center">TikTok for Linux</h1>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Platform-Linux-red?style=flat-square&logo=linux" alt="Platform">
-  <img src="https://img.shields.io/badge/Arch%20Linux-Supported-blue?style=flat-square&logo=arch-linux" alt="Arch Linux">
-  <img src="https://img.shields.io/badge/Debian%2FUbuntu-Supported-red?style=flat-square&logo=debian" alt="Debian/Ubuntu">
-  <img src="https://img.shields.io/badge/Fedora%2FRPM-Supported-blue?style=flat-square&logo=fedora" alt="Fedora/RPM">
-  <a href="#license"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
-</p>
+<div align="center">
 
-<p align="center">
-  An open source TikTok desktop application for Linux.
-  I created this because in Waydroid I can't use Tiktok so I created tiktok for Linux 🔥🔥✅
-</p>
+[![Arch Linux](https://img.shields.io/badge/Arch_Linux-1793d1?style=for-the-badge&logo=archlinux&logoColor=white "Arch Linux - A simple, lightweight distribution")](https://archlinux.org/)
+[![Debian](https://img.shields.io/badge/Debian-A81D33?style=for-the-badge&logo=debian&logoColor=white "Debian - The Universal Operating System")](https://www.debian.org/)
+[![Fedora](https://img.shields.io/badge/Fedora-51A2DA?style=for-the-badge&logo=fedora&logoColor=white "Fedora - Innovative, Free, and Open Source")](https://fedoraproject.org/)
+</div>
 
+<div align="center">
+ <p><i>An open source Tiktok desktop app for linux, this was created because on Waydroid I can't use tiktok so i created this.</i></p>
+</div>
 
-### How to install:
+[![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&pause=1000&color=F7F7F7&vCenter=true&multiline=true&width=435&height=35&lines=HOW+TO+INSTALL+)](https://git.io/typing-svg)
 
 To install, clone the repository and run the `install.sh` script:
 
@@ -34,17 +31,17 @@ After installation, you can launch the application in several ways:
 2. **Desktop shortcut:** Click the TikTok icon on your desktop.
 3. **Terminal:** Just type `tiktok`.
 
-## Uninstallation
+[![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&pause=1000&color=F7F7F7&vCenter=true&multiline=true&width=435&height=35&lines=UNINSTALL)](https://git.io/typing-svg)
 
-To remove the application and all its components (icon, menu entry, terminal alias, and local data):
+To remove the application and all its components (icon, menu entry, terminal alias, and local data) use this script:
 
 ```bash
 chmod +x uninstall.sh
 ./uninstall.sh
 ```
 
-## Screenshots
+[![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&pause=1000&color=F7F7F7&vCenter=true&multiline=true&width=435&height=35&lines=DEMO)](https://git.io/typing-svg)
 
 ![alt text](image.png)
 
-# This image its just for reference nothing more
+
