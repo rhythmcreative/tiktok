@@ -5,6 +5,7 @@
 [![Arch Linux](https://img.shields.io/badge/Arch_Linux-1793d1?style=for-the-badge&logo=archlinux&logoColor=white "Arch Linux - A simple, lightweight distribution")](https://archlinux.org/)
 [![Debian](https://img.shields.io/badge/Debian-A81D33?style=for-the-badge&logo=debian&logoColor=white "Debian - The Universal Operating System")](https://www.debian.org/)
 [![Fedora](https://img.shields.io/badge/Fedora-51A2DA?style=for-the-badge&logo=fedora&logoColor=white "Fedora - Innovative, Free, and Open Source")](https://fedoraproject.org/)
+[![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white "Ubuntu - Linux for Human Beings")](https://ubuntu.com/)
 </div>
 
 <div align="center">
