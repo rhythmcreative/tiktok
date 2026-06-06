@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const os = require('os');
 
 const electronDir = path.join(__dirname, 'node_modules', 'electron');
 const pathFile = path.join(electronDir, 'path.txt');
@@ -15,13 +16,12 @@ if (!fs.existsSync(electronDir)) {
 function verifyElectron() {
   if (fs.existsSync(electronBin) && fs.existsSync(pathFile)) {
     try {
-      const result = spawnSync(electronBin, ['-v']);
-      if (result.status === 0) {
-        return true;
+      // Check version too
+      const versionFile = path.join(distDir, 'version');
+      if (fs.existsSync(versionFile)) {
+         return true;
       }
-    } catch (e) {
-      // Ignore
-    }
+    } catch (e) {}
   }
   return false;
 }
@@ -38,12 +38,65 @@ if (!verifyElectron()) {
 
   // Check again
   if (!verifyElectron()) {
-    console.log('Still broken. Manual extraction required.');
-    // We could try to find the zip in cache, but for now we'll just advise
-    console.log('Please run ./install.sh to fix dependencies.');
+    console.log('install.js failed. Attempting manual extraction from cache...');
+    
+    try {
+      const { version } = require(path.join(electronDir, 'package.json'));
+      const cacheBase = path.join(os.homedir(), '.cache', 'electron');
+      
+      if (fs.existsSync(cacheBase)) {
+        // Look for the zip file in subdirectories
+        const findZip = (dir) => {
+          const files = fs.readdirSync(dir);
+          for (const file of files) {
+            const fullPath = path.join(dir, file);
+            if (fs.statSync(fullPath).isDirectory()) {
+              const found = findZip(fullPath);
+              if (found) return found;
+            } else if (file.endsWith('.zip') && file.includes(version)) {
+              return fullPath;
+            }
+          }
+          return null;
+        };
+        
+        const zipPath = findZip(cacheBase);
+        if (zipPath) {
+          console.log('Found zip in cache:', zipPath);
+          if (!fs.existsSync(distDir)) fs.mkdirSync(distDir, { recursive: true });
+          
+          console.log('Extracting...');
+          const unzip = spawnSync('unzip', ['-o', zipPath, '-d', distDir]);
+          
+          if (unzip.status === 0) {
+            fs.writeFileSync(pathFile, 'electron');
+            fs.writeFileSync(path.join(distDir, 'version'), 'v' + version);
+            
+            if (process.platform !== 'win32') {
+               fs.chmodSync(electronBin, 0o755);
+            }
+            console.log('Manual extraction successful.');
+          } else {
+            console.error('Unzip failed.');
+          }
+        } else {
+          console.error('Could not find Electron zip in cache for version', version);
+        }
+      }
+    } catch (err) {
+      console.error('Manual fix failed:', err.message);
+    }
+  }
+
+  if (!verifyElectron()) {
+    console.log('Still broken. Please run ./install.sh to fix dependencies.');
   } else {
     console.log('Electron fixed successfully.');
   }
 } else {
-  console.log('Electron binary is verified.');
+  // Even if verified, ensure path.txt is correct (no newlines)
+  const currentPath = fs.readFileSync(pathFile, 'utf-8');
+  if (currentPath !== 'electron') {
+     fs.writeFileSync(pathFile, 'electron');
+  }
 }
