@@ -1,3 +1,6 @@
+> [!WARNING]  
+> _This repository is on development to put support to all main distros for Linux, there may be errors and bugs. Proceed with caution!_
+> 
 <h1 align="center">TikTok for Linux</h1>
 
 <div align="center">
