@@ -307,6 +307,9 @@ if [ ! -d "node_modules" ]; then
     exit 1
 fi
 
+# Ensure Electron is correctly set up
+npm run fix-electron --silent
+
 export PATH=\$PATH:/usr/local/bin:/usr/bin:/bin
 npm start
 EOF

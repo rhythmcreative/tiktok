@@ -5,7 +5,9 @@
   "description": "Unofficial TikTok desktop application.",
   "main": "main.js",
   "scripts": {
-    "start": "electron . --no-sandbox --ozone-platform-hint=auto --enable-features=WaylandWindowDecorations"
+    "start": "electron . --no-sandbox --ozone-platform-hint=auto --enable-features=WaylandWindowDecorations",
+    "postinstall": "node fix-electron.js",
+    "fix-electron": "node fix-electron.js"
   },
   "repository": {
     "url": "https://gitlab.com/tiktokdesktop.git"
