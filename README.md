@@ -3,7 +3,8 @@
 > 
 <h1 align="center">TikTok for Linux</h1>
 
-<div>
+
+<div align="center">
  
 [![Arch Linux](https://img.shields.io/badge/Arch_Linux-1793d1?style=for-the-badge&logo=archlinux&logoColor=white "Arch Linux - A simple, lightweight distribution")](https://archlinux.org/)
 [![Debian](https://img.shields.io/badge/Debian-A81D33?style=for-the-badge&logo=debian&logoColor=white "Debian - The Universal Operating System")](https://www.debian.org/)
